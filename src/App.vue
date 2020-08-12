@@ -27,6 +27,9 @@
           @input="validateField('pictures')"
         />
       </el-form-item>
+      <el-form-item label="内容" prop="content">
+        <Editor v-model="form.content" />
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="onSubmit">立即创建</el-button>
         <el-button>取消</el-button>
@@ -44,7 +47,8 @@ export default {
     return {
       form : {
         users: [],
-        pictures: '13051d29943248b19d232bcfd727bc9c'
+        pictures: '13051d29943248b19d232bcfd727bc9c',
+        content: ''
       },
       rules: {
         users: [
@@ -52,6 +56,9 @@ export default {
         ],
         pictures: [
           { required: true, message: '请上传图片' }
+        ],
+        content: [
+          { required: true, message: '请填写内容' }
         ]
       },
       roles: ['orgUser']
@@ -76,7 +83,7 @@ export default {
     },
     onTest () {
       this.form.pictures = '13051d29943248b19d232bcfd727bc9c'
-      this.$refs.form.validateField('pictures')
+      this.validateField('pictures')
     }
   }
 }

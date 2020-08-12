@@ -1,5 +1,6 @@
 import chooseUser from './src/components/chooseUser'
 import fileUp from './src/components/FileUp'
+import editor from './src/components/editor'
 
 const XcComponents = {
   path: function(){
@@ -20,6 +21,7 @@ const XcComponents = {
   install: Vue => {
     Vue.component(chooseUser.name, chooseUser)
     Vue.component(fileUp.name, fileUp)
+    Vue.component(editor.name, editor)
   }
 }
 

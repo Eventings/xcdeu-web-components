@@ -11,8 +11,10 @@
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
   },
   "dependencies": {
+    "@tinymce/tinymce-vue": "^3.2.2",
     "@xcedu/web-share": "^1.0.12",
     "ali-oss": "^6.9.1",
+    "tinymce": "^5.4.0",
     "uuid": "^8.2.0",
     "vue-giant-tree": "^0.1.3"
   },
