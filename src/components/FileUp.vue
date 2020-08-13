@@ -329,6 +329,9 @@ export default {
 <style lang="scss" scoped>
   .xc-file-up {
     line-height: 23px;
+    .upload-demo {
+      line-height: 40px;
+    }
     .file-container {
       .file-item {
         padding: 8px;

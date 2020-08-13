@@ -7,6 +7,9 @@
       label-width="100px"
       style="margin: 20px auto; width: 1000px;"
     >
+      <el-form-item label="活动名称" prop="name">
+        <el-input v-model="form.name"></el-input>
+      </el-form-item>
       <el-form-item label="选人" prop="users">
         <chooseUser
           v-model="form.users"
@@ -46,11 +49,16 @@ export default {
   data () {
     return {
       form : {
+        name: '',
         users: [],
         pictures: '13051d29943248b19d232bcfd727bc9c',
         content: ''
       },
       rules: {
+        name: [
+          { required: true, message: '请输入活动名称', trigger: 'blur' },
+          { min: 3, max: 5, message: '长度在 3 到 5 个字符' }
+        ],
         users: [
           { type: 'array', required: true, message: '请选择人员' }
         ],
