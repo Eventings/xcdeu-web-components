@@ -1,4 +1,4 @@
-import { axios } from '@xcedu/web-share'
+import { axios } from '@xcedu-web-share'
 
 // 测试环境需要在请求url前加前缀
 const prefix = '/api-personalized'
@@ -13,6 +13,10 @@ export function getSearchListByValue (params) {
   return axios.get('/api-base/rangeScopes?type=search', { params })
 }
 
+// 获取阿里云密钥
+export function getOSSKey (data) {
+  return axios.post('/api-base/attachments/settings', data)
+}
 // 上传附件
 export function uploadResource (data) {
   return axios.post('/api-base/attachments/save', data)

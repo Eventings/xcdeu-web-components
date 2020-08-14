@@ -29,6 +29,7 @@
 </template>
 
 <script>
+import { getOSSKey } from '@/api/index'
 // Import TinyMCE
 import 'tinymce/tinymce'
 // Default icons are required for TinyMCE 5.3 or above
@@ -44,6 +45,8 @@ import OSS from 'ali-oss'
 import { v4 as uuidv4 } from 'uuid'
 
 let PATH = null
+const region = 'oss-cn-shenzhen'
+const bucket = 'gtyzfile'
 
 export default {
   name: 'Editor',
@@ -79,29 +82,40 @@ export default {
     editorChange (value) {
       this.$emit('input', value)
     },
+    getClient () {
+      return new Promise((resolve, reject) => {
+        if (!this.client) {
+          getOSSKey().then(res => {
+            this.client = new OSS({
+              region: region,
+              accessKeyId: res.accessKeyId,
+              accessKeySecret: res.accessKeySecret,
+              bucket: bucket
+            })
+            resolve(this.client)
+          }).catch(() => reject())
+        } else {
+          resolve(this.client)
+        }
+      })
+    },
     fileUpLoad (blobInfo, success, failure, progress) {
       if (!PATH) {
         PATH = 'tinyMCE/img/'
       }
-      if (!this.client) {
-        this.client = new OSS({
-          region: 'oss-cn-shenzhen',
-          accessKeyId: 'LTAI4G2nbEWcDi9djnDY8tvJ',
-          accessKeySecret: 'ZZN02tVv7BpJEhc5bWa2NlNIdL6Vvp',
-          bucket: 'gtyzfile'
+      this.getClient().then(client => {
+        const id = uuidv4().replace(/-/g, '')
+        const rawFile = blobInfo.blob()
+        const fileName = id + rawFile.name.substring(rawFile.name.lastIndexOf('.'))
+        client.multipartUpload(PATH + fileName, rawFile, {
+          progress: p => {
+            progress(p * 100)
+          }
+        }).then(res => {
+          success(res.res.requestUrls[0].replace(/\?.*/g, ''))
+        }).catch(err => {
+          failure('Image upload failed due to a XHR Transport error. Code: ' + err)
         })
-      }
-      const id = uuidv4().replace(/-/g, '')
-      const rawFile = blobInfo.blob()
-      const fileName = id + rawFile.name.substring(rawFile.name.lastIndexOf('.'))
-      this.client.multipartUpload(PATH + fileName, rawFile, {
-        progress: p => {
-          progress(p * 100)
-        }
-      }).then(res => {
-        success(res.res.requestUrls[0].replace(/\?.*/g, ''))
-      }).catch(err => {
-        failure('Image upload failed due to a XHR Transport error. Code: ' + err)
       })
     }
   }

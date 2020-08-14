@@ -50,11 +50,13 @@
   </section>
 </template>
 <script>
-import { uploadResource, loadDetailBatchByIds } from '@/api/index'
+import { getOSSKey, uploadResource, loadDetailBatchByIds } from '@/api/index'
 import { downloadAttachment } from '@/util/index'
 import OSS from 'ali-oss'
 import { v4 as uuidv4 } from 'uuid'
 let PATH = null
+const region = 'oss-cn-shenzhen'
+const bucket = 'gtyzfile'
 export default {
   name: 'FileUp',
   props: {
@@ -191,15 +193,21 @@ export default {
   },
   methods: {
     getClient () {
-      if (!this.client) {
-        this.client = new OSS({
-          region: 'oss-cn-shenzhen',
-          accessKeyId: 'LTAI4G2nbEWcDi9djnDY8tvJ',
-          accessKeySecret: 'ZZN02tVv7BpJEhc5bWa2NlNIdL6Vvp',
-          bucket: 'gtyzfile'
-        })
-      }
-      return this.client
+      return new Promise((resolve, reject) => {
+        if (!this.client) {
+          getOSSKey().then(res => {
+            this.client = new OSS({
+              region: region,
+              accessKeyId: res.accessKeyId,
+              accessKeySecret: res.accessKeySecret,
+              bucket: bucket
+            })
+            resolve(this.client)
+          }).catch(() => reject())
+        } else {
+          resolve(this.client)
+        }
+      })
     },
     delFile (index) {
       this.$confirm('是否确认删除该' + (this.uploadType === 'image' ? '图片？' : '附件？'), '', {
@@ -242,14 +250,16 @@ export default {
       }
       this.fileList.push(file)
       const fileName = id + rawFile.name.substring(rawFile.name.lastIndexOf('.'))
-      this.getClient().multipartUpload(PATH + fileName, rawFile, {
-        progress: p => {
-          file.progress = p * 100
-        }
-      }).then(res => {
-        this.uploadOnSuccess(res, file)
-      }).catch(err => {
-        window.console.log(err)
+      this.getClient().then(client => {
+        client.multipartUpload(PATH + fileName, rawFile, {
+          progress: p => {
+            file.progress = p * 100
+          }
+        }).then(res => {
+          this.uploadOnSuccess(res, file)
+        }).catch(err => {
+          window.console.log(err)
+        })
       })
     },
     uploadOnSuccess (res, file) {
@@ -306,12 +316,14 @@ export default {
       if (file.url.indexOf('blob:') === 0) {
         downloadAttachment(file.url, file.displayName)
       } else {
-        const result = this.getClient().signatureUrl(file.url.replace(/.*\.com\//, ''), {
-          response: {
-            'content-disposition': 'attachment; filename="' + file.displayName + '"'
-          }
+        this.getClient().then(client => {
+          const result = client.signatureUrl(file.url.replace(/.*\.com\//, ''), {
+            response: {
+              'content-disposition': 'attachment; filename="' + file.displayName + '"'
+            }
+          })
+          window.location = result
         })
-        window.location = result
       }
     },
     // 是否还有未完成的上传（提供外部使用）
@@ -351,7 +363,7 @@ export default {
         height: 94px;
         border: 1px solid #eee;
         margin: 10px 110px 10px 0;
-        ::v-deep .el-image {
+        >>> .el-image {
           width: 100%;
           height: 100%;
         }

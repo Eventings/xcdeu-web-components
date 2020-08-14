@@ -58,6 +58,7 @@ module.exports = {
   resolve: {
     alias: {
       '@': path.resolve('src'),
+      '@xcedu-web-share': path.resolve('../xcedu-web-share'),
       'vue$': 'vue/dist/vue.esm.js'
     },
     extensions: ['*', '.js', '.vue', '.json']
