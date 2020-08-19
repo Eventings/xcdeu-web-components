@@ -1,4 +1,4 @@
-import { axios } from '@xcedu-web-share'
+import { axios } from 'xc-share'
 
 // 测试环境需要在请求url前加前缀
 const prefix = '/api-personalized'

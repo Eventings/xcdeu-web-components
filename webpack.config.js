@@ -5,13 +5,17 @@ const NODE_ENV = process.env.NODE_ENV
 
 module.exports = {
   entry: NODE_ENV == 'development' ? './src/main.js' : './index.js',
-  output: {
+  output: NODE_ENV == 'development' ? {
     path: path.resolve(__dirname, './dist'),
     publicPath: '/',
-    filename: 'xcedu-component.js',
-    library: 'xcedu-component', // 指定的就是你使用require时的模块名称
+  } : {
+    path: path.resolve(__dirname, './dist'),
+    publicPath: '/',
+    filename: 'xcedu-components.js',
+    library: 'XcComponents', // 指定的就是你使用require时的模块名称
     libraryTarget: 'umd', //指定输出格式
-    umdNamedDefine: true //会对UMD 的构建过程中的AMD 模块进行命名，否则就使用匿名的 define
+    umdNamedDefine: true, //会对UMD 的构建过程中的AMD 模块进行命名，否则就使用匿名的 define
+    libraryExport: 'default'
   },
   module: {
     rules: [
@@ -58,10 +62,12 @@ module.exports = {
   resolve: {
     alias: {
       '@': path.resolve('src'),
-      '@xcedu-web-share': path.resolve('../xcedu-web-share'),
       'vue$': 'vue/dist/vue.esm.js'
     },
     extensions: ['*', '.js', '.vue', '.json']
+  },
+  externals: {
+    'xc-share': 'XcShare'
   },
   devServer: {
     historyApiFallback: true,
