@@ -25,3 +25,7 @@ export function uploadResource (data) {
 export function loadDetailBatchByIds (params) {
   return axios.get('/api-base/attachments/infoList', { params })
 }
+
+export function getUserInfo () {
+  return axios.get('/api-base/users/userInfo')
+}
