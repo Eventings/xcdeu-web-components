@@ -14,8 +14,8 @@ export function getSearchListByValue (params) {
 }
 
 // 获取阿里云密钥
-export function getOSSKey (data) {
-  return axios.post('/api-base/attachments/settings', data)
+export function getOSSKey (params) {
+  return axios.get('/api-base/attachments/settings', { params })
 }
 // 上传附件
 export function uploadResource (data) {

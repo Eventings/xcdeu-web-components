@@ -30,6 +30,27 @@
           @input="validateField('pictures')"
         />
       </el-form-item>
+      <el-form-item label="上传样式" prop="upload">
+        <FileUp
+          v-model="form.upload"
+        >
+          <el-button type="text">上传文件</el-button>
+          <template v-slot:list="slotProps">
+            <div v-for="file in slotProps.fileList">
+              名称：{{file.displayName}}， 大小：{{file.fileSize}}， id：{{file.id}}，
+              url：{{file.url}}， 状态：{{file.status}}， 进度：{{file.progress}}
+            </div>
+          </template>
+        </FileUp>
+      </el-form-item>
+      <el-form-item label="限制上传个数">
+        <FileUp
+          value="13051d29943248b19d232bcfd727bc9c"
+          :limit="1"
+          :on-exceed="handleExceed"
+        >
+        </FileUp>
+      </el-form-item>
       <el-form-item label="内容" prop="content">
         <Editor v-model="form.content" />
       </el-form-item>
@@ -52,6 +73,7 @@ export default {
         name: '',
         users: [],
         pictures: '13051d29943248b19d232bcfd727bc9c',
+        upload: '13051d29943248b19d232bcfd727bc9c',
         content: ''
       },
       rules: {
@@ -77,6 +99,9 @@ export default {
     getSearchList: getSearchListByValue,
     validateField (type) {
       this.$refs.form.validateField(type)
+    },
+    handleExceed (files, fileList) {
+      this.$message.warning(`当前限制选择 1 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
     },
     onSubmit () {
       this.$refs.form.validate(valid => {
