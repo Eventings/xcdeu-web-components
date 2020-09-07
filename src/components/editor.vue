@@ -11,16 +11,27 @@
         content_css: publicPath + 'tinymce/skins/content/default/content.css',
         menubar: true,
         toolbar:
-          'undo redo | formatselect | bold italic backcolor | \
+          'undo redo | \
+          fontselect fontsizeselect formatselect | \
+          bold italic underline strikethrough superscript subscript codeformat | \
           alignleft aligncenter alignright alignjustify | \
-          bullist numlist outdent indent | removeformat | \
-          image link | wordcount',
-        plugins: 'image link wordcount',
+          outdent indent | \
+          forecolor backcolor removeformat | \
+          numlist bullist | \
+          code | \
+          charmap emoticons hr nonbreaking insertdatetime | \
+          fullscreen  preview print | \
+          image link codesample table | \
+          ltr rtl | \
+          wordcount',
+        toolbar_mode: 'sliding',
+        plugins: 'searchreplace paste lists advlist code charmap emoticons hr nonbreaking insertdatetime fullscreen preview print image link codesample table directionality wordcount help',
         image_description: false,
         images_reuse_filename: true,
         images_upload_handler: fileUpLoad,
         file_picker_types: 'file',
         file_picker_callback: filePickerCallback,
+        emoticons_database_url: publicPath + 'tinymce/plugins/emoticons/emojis.min.js',
         elementpath: false,
         branding: false
       }"
@@ -55,9 +66,26 @@ import 'tinymce/icons/default'
 // A theme is also required
 import 'tinymce/themes/silver'
 // Any plugins you want to use has to be imported
+import 'tinymce/plugins/searchreplace'
+import 'tinymce/plugins/paste'
+import 'tinymce/plugins/lists'
+import 'tinymce/plugins/advlist'
+import 'tinymce/plugins/code'
+import 'tinymce/plugins/charmap'
+import 'tinymce/plugins/emoticons'
+import 'tinymce/plugins/hr'
+import 'tinymce/plugins/nonbreaking'
+import 'tinymce/plugins/insertdatetime'
+import 'tinymce/plugins/fullscreen'
+import 'tinymce/plugins/preview'
+import 'tinymce/plugins/print'
 import 'tinymce/plugins/image'
 import 'tinymce/plugins/link'
+import 'tinymce/plugins/codesample'
+import 'tinymce/plugins/table'
+import 'tinymce/plugins/directionality'
 import 'tinymce/plugins/wordcount'
+import 'tinymce/plugins/help'
 import editor from '@tinymce/tinymce-vue'
 
 import OSS from 'ali-oss'
