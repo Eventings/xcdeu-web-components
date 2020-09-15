@@ -38,6 +38,7 @@
       class="abow_dialog"
       :fullscreen="isFullScreen"
       @open="openChooseUserModal"
+      append-to-body
     >
       <!-- <span>这是一段信息</span> -->
       <div class="choose-selector">
@@ -122,6 +123,7 @@
 </template>
 <script>
 import tree from 'vue-giant-tree'
+import { getChooseUserDataByParams, getSearchListByValue } from '@/api/index'
 export default {
   name: 'chooseUser',
   components: { tree },
@@ -144,11 +146,11 @@ export default {
     },
     getUser: {
       type: Function,
-      required: true
+      default: getChooseUserDataByParams
     },
     getSearchList: {
       type: Function,
-      required: true
+      default: getSearchListByValue
     }
   },
   data () {
