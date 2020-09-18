@@ -16,5 +16,9 @@
     <script src="<%= MODULE_COMMON_BASE_URL %>/lib/vendor.min.js"></script>
     <script src="<%= MODULE_COMMON_BASE_URL %>/element/element-ui.min.js"></script>
     <script src="<%= MODULE_COMMON_BASE_URL %>/xcbase/xcbase.js"></script>
+    <script type="text/javascript">
+      // 确保引用组件前没有jQuery
+      window.jQuery && (window.jQuery = undefined);
+    </script>
   </body>
 </html>
