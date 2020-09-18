@@ -396,10 +396,14 @@ export default {
     },
     // 搜索显示输入框
     showInput () {
-      this.inputVisible = true
-      this.$nextTick(function () {
-        this.$refs.saveTagInput.focus()
-      })
+      if (this.allowWrite) {
+        this.inputVisible = true
+        this.$nextTick(function () {
+          this.$refs.saveTagInput.focus()
+        })
+      } else {
+        this.chooseUser()
+      }
     },
     // 打开选人模态框
     chooseUser () {
