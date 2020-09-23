@@ -13,10 +13,9 @@
       <el-form-item label="选人" prop="users">
         <chooseUser
           v-model="form.users"
-          :allow-write="false"
-          :select-role="roles"
-          :get-user="getUser"
-          :get-search-list="getSearchList"
+          :select-role="['orgUser']"
+          single
+          users-only
           @input="validateField('users')"
         />
       </el-form-item>
@@ -64,7 +63,6 @@
 </template>
 
 <script>
-import { getChooseUserDataByParams, getSearchListByValue } from '@/api/index'
 export default {
   name: 'app',
   data () {
@@ -90,13 +88,10 @@ export default {
         content: [
           { required: true, message: '请填写内容' }
         ]
-      },
-      roles: ['orgUser']
+      }
     }
   },
   methods: {
-    getUser: getChooseUserDataByParams,
-    getSearchList: getSearchListByValue,
     validateField (type) {
       this.$refs.form.validateField(type)
     },
