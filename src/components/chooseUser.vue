@@ -19,7 +19,7 @@
           size="small"
           :highlight-first-item="true"
           :fetch-suggestions="querySearchAsync"
-          :select-when-unmatched="true"
+          :select-when-unmatched="false"
           @select="handleSelect"
           @change="changeSelect"
         >
@@ -39,6 +39,7 @@
       :fullscreen="isFullScreen"
       @open="openChooseUserModal"
       append-to-body
+      :close-on-click-modal="false"
     >
       <div class="choose-selector">
         <el-button type="text" style="position: absolute; right: 0; top: 0; z-index: 1" @click="clearAll">全部清空</el-button>
@@ -52,7 +53,6 @@
                 :fetch-suggestions="treeSearch"
                 :select-when-unmatched="true"
                 placeholder="快速查找组织与人"
-                clearable
                 @select="(item) => handleTreeSelect(item, 'orgUser')"
               >
                 <i
@@ -183,7 +183,7 @@ export default {
       orgUserSearchValue: '',
       selectedSearchValue: '',
       dialogVisible: false,
-      activeName: 'orgUser',
+      activeName: '',
       orgUserNodes: [],
       orgUserSearchNodes: [],
       orgUserTree: null,
@@ -297,6 +297,7 @@ export default {
     },
     // 打开模态框 重新渲染已经选择的用户
     openChooseUserModal () {
+      this.activeName = this.tabRoles[0]
       this.selelctedFilterArr = JSON.parse(JSON.stringify(this.selectedArr))
       this.canceSelectAllBtns()
       for (const role of this.tabRoles) {
