@@ -31,7 +31,7 @@
       <el-button slot="append" :disabled="disabled" @click.native="chooseUser">...</el-button>
     </div>
     <el-dialog
-      title="选择成员对象"
+      :title="title"
       :visible.sync="dialogVisible"
       width="1000"
       top="0"
@@ -48,12 +48,16 @@
           <el-tab-pane v-if="tabRoles.includes('orgUser')" label="组织" name="orgUser">
             <div class="choose-selector-select-container">
               <el-autocomplete
+                ref="orgUserSearchInput"
                 v-model="orgUserSearchValue"
                 popper-class="my-autocomplete"
                 :fetch-suggestions="treeSearch"
                 :select-when-unmatched="true"
                 placeholder="快速查找组织与人"
                 @select="(item) => handleTreeSelect(item, 'orgUser')"
+                clearable
+                @clear="handleClearSearchValue('orgUser')"
+                :validate-event="false"
               >
                 <i
                   slot="prefix"
@@ -115,6 +119,8 @@
           <el-input
             v-model="selectedSearchValue"
             placeholder="快速查找"
+            clearable
+            :validate-event="false"
           >
             <i slot="prefix" class="el-input__icon el-icon-search" />
           </el-input>
@@ -176,6 +182,10 @@ export default {
     usersOnly: {
       type: Boolean,
       default: false
+    },
+    title: {
+      type: String,
+      default: '选择成员对象'
     }
   },
   data () {
@@ -348,21 +358,17 @@ export default {
         allSelect.appendChild(text)
         const selectNode = document.getElementById(treeNode.tId)
         selectNode.appendChild(allSelect)
-        const _that = this
+        const treeObj = window.jQuery.fn.zTree.getZTreeObj(treeId)
         checkbox.onclick = function () {
           const check = this.checked
           const treeNodes = treeNode.children
           if (check) {
             for (const node of treeNodes) {
-              if (_that.orgUserTree) {
-                _that.orgUserTree.checkNode(node, true, false, true)
-              }
+              treeObj.checkNode(node, true, false, true)
             }
           } else {
             for (const node of treeNodes) {
-              if (_that.orgUserTree) {
-                _that.orgUserTree.checkNode(node, false, false, true)
-              }
+              treeObj.checkNode(node, false, false, true)
             }
           }
         }
@@ -509,6 +515,9 @@ export default {
       this.selectedArr = this.selelctedFilterArr
       this.$emit('input', this.selectedArr)
       this.dialogVisible = false
+    },
+    handleClearSearchValue (name) {
+      this.$refs[name + 'SearchInput'].activated = true
     }
   }
 }
