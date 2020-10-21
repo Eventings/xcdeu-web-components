@@ -208,6 +208,13 @@ export default {
         this.$message.error('禁止上传无格式的文件！')
         return false
       }
+      // 如果限制只能上传图片则用户选择非图片后阻止上传
+      if (this.fileAccept === 'image/*') {
+        if (file.type.indexOf('image/') === -1) {
+          this.$message.error('只能上传图片格式的文件！')
+          return false
+        }
+      }
     },
     // 附件上传
     fileUpLoad (http) {

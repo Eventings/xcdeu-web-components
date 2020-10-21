@@ -19,7 +19,7 @@
           size="small"
           :highlight-first-item="true"
           :fetch-suggestions="querySearchAsync"
-          :select-when-unmatched="true"
+          :select-when-unmatched="false"
           @select="handleSelect"
           @change="changeSelect"
         >
@@ -28,10 +28,10 @@
           </template>
         </el-autocomplete>
       </div>
-      <el-button slot="append" @click.native="chooseUser">...</el-button>
+      <el-button slot="append" :disabled="disabled" @click.native="chooseUser">...</el-button>
     </div>
     <el-dialog
-      title="选择成员对象"
+      :title="title"
       :visible.sync="dialogVisible"
       width="1000"
       top="0"
@@ -39,22 +39,25 @@
       :fullscreen="isFullScreen"
       @open="openChooseUserModal"
       append-to-body
+      :close-on-click-modal="false"
     >
-      <!-- <span>这是一段信息</span> -->
       <div class="choose-selector">
         <el-button type="text" style="position: absolute; right: 0; top: 0; z-index: 1" @click="clearAll">全部清空</el-button>
 
         <el-tabs v-model="activeName">
-          <el-tab-pane v-if="tabRoles.includes('orgUser')" label="组织" name="org">
+          <el-tab-pane v-if="tabRoles.includes('orgUser')" label="组织" name="orgUser">
             <div class="choose-selector-select-container">
               <el-autocomplete
+                ref="orgUserSearchInput"
                 v-model="orgUserSearchValue"
                 popper-class="my-autocomplete"
                 :fetch-suggestions="treeSearch"
                 :select-when-unmatched="true"
                 placeholder="快速查找组织与人"
-                clearable
                 @select="(item) => handleTreeSelect(item, 'orgUser')"
+                clearable
+                @clear="handleClearSearchValue('orgUser')"
+                :validate-event="false"
               >
                 <i
                   slot="prefix"
@@ -87,7 +90,19 @@
               />
             </div>
           </el-tab-pane>
-          <el-tab-pane v-if="tabRoles.includes('myGroup')" label="我的群组" name="my">
+          <el-tab-pane v-if="tabRoles.includes('grade')" label="年级" name="grade">
+            <div class="choose-selector-select-container">
+              <tree
+                ref="gradeNodes"
+                :nodes="gradeNodes"
+                :setting="setting"
+                @onCheck="onCheck"
+                @onCreated="(treeObj) => handleCreated(treeObj, 'gradeTree')"
+                @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'gradeTree')"
+              />
+            </div>
+          </el-tab-pane>
+          <el-tab-pane v-if="tabRoles.includes('myGroup')" label="我的群组" name="myGroup">
             <div class="choose-selector-select-container">
               <tree
                 ref="myGroupNodes"
@@ -104,6 +119,8 @@
           <el-input
             v-model="selectedSearchValue"
             placeholder="快速查找"
+            clearable
+            :validate-event="false"
           >
             <i slot="prefix" class="el-input__icon el-icon-search" />
           </el-input>
@@ -151,6 +168,24 @@ export default {
     getSearchList: {
       type: Function,
       default: getSearchListByValue
+    },
+    disabled: {
+      type: Boolean,
+      default: false
+    },
+    // 单选
+    single: {
+      type: Boolean,
+      default: false
+    },
+    // 只选人不选组织
+    usersOnly: {
+      type: Boolean,
+      default: false
+    },
+    title: {
+      type: String,
+      default: '选择成员对象'
     }
   },
   data () {
@@ -158,22 +193,24 @@ export default {
       orgUserSearchValue: '',
       selectedSearchValue: '',
       dialogVisible: false,
-      activeName: 'org',
+      activeName: '',
       orgUserNodes: [],
       orgUserSearchNodes: [],
+      orgUserTree: null,
       groupNodes: [],
       groupSearchNodes: [],
+      groupTree: null,
       myGroupNodes: [],
       myGroupSearchNodes: [],
-      orgUserTree: null,
-      groupTree: null,
       myGroupTree: null,
+      gradeNodes: [],
+      gradeSearchNodes: [],
+      gradeTree: null,
       inputVisible: false,
       inputVal: '',
       inputSearchList: [],
       selectedArr: [],
       selelctedFilterArr: [],
-      selectedIds: '',
       tabRoles: [],
       setting: {
         dblClickExpand: false,
@@ -182,7 +219,9 @@ export default {
           chkboxType: {
             Y: '',
             N: ''
-          }
+          },
+          chkStyle: this.single ? 'radio' : 'checkbox',
+          radioType: "all"
         },
         data: {
           simpleData: {
@@ -211,9 +250,7 @@ export default {
       const value = this.selectedSearchValue
       if (value) {
         return this.selelctedFilterArr.filter(function (item) {
-          if (item.name.toString().indexOf(value) !== -1) {
-            return item
-          }
+          return (item.name.toString().indexOf(value) !== -1)
         })
       }
       return this.selelctedFilterArr
@@ -270,6 +307,7 @@ export default {
     },
     // 打开模态框 重新渲染已经选择的用户
     openChooseUserModal () {
+      this.activeName = this.tabRoles[0]
       this.selelctedFilterArr = JSON.parse(JSON.stringify(this.selectedArr))
       this.canceSelectAllBtns()
       for (const role of this.tabRoles) {
@@ -278,10 +316,10 @@ export default {
     },
     // 全部清空
     clearAll () {
-      this.canceSelectAllBtns()
       this.selelctedFilterArr = []
-      if (this.orgUserTree) {
-        this.orgUserTree.checkAllNodes(false)
+      this.canceSelectAllBtns()
+      for (const role of this.tabRoles) {
+        this.initTreeCheck(this[role + 'Tree'])
       }
     },
     // 清除所有树节点全选
@@ -305,6 +343,9 @@ export default {
     },
     // 初始化树 的全选 节点
     addDiyDom (treeId, treeNode) {
+      if (this.single) {
+        return;
+      }
       if (treeNode.isParent) {
         // 如果该节点为父节点 则在该节点后 新增全选按钮 点击全选 下面的子节点 全部被选中
         const allSelect = document.createElement('label')
@@ -317,21 +358,17 @@ export default {
         allSelect.appendChild(text)
         const selectNode = document.getElementById(treeNode.tId)
         selectNode.appendChild(allSelect)
-        const _that = this
+        const treeObj = window.jQuery.fn.zTree.getZTreeObj(treeId)
         checkbox.onclick = function () {
           const check = this.checked
           const treeNodes = treeNode.children
           if (check) {
             for (const node of treeNodes) {
-              if (_that.orgUserTree) {
-                _that.orgUserTree.checkNode(node, true, false, true)
-              }
+              treeObj.checkNode(node, true, false, true)
             }
           } else {
             for (const node of treeNodes) {
-              if (_that.orgUserTree) {
-                _that.orgUserTree.checkNode(node, false, false, true)
-              }
+              treeObj.checkNode(node, false, false, true)
             }
           }
         }
@@ -347,28 +384,49 @@ export default {
     },
     handleCreated (ztreeObj, cmd) {
       this[cmd] = ztreeObj
+      // 初始化设置禁用
+      let nodes_all = ztreeObj.getNodes(); //获取根节点下的子节点
+      nodes_all = ztreeObj.transformToArray(nodes_all);
+      if (this.usersOnly) {
+        // 遍历所有的节点，如果该节点popcode != user则禁用单/复选框
+        for (let i = 0; i < nodes_all.length; i++) {
+          if (nodes_all[i].popCode !== "user") {
+            ztreeObj.setChkDisabled(nodes_all[i], true, false, false);
+          }
+        }
+      }
       this.initTreeCheck(ztreeObj)
     },
     // 初始化ztree选项
     initTreeCheck (ztreeObj) {
-      const selectArr = this.selelctedFilterArr
-      if (selectArr.length > 0) {
+      if (ztreeObj) {
+        ztreeObj.checkAllNodes(false)
+        // 清空单选框
+        if (this.single) {
+          let nodes = ztreeObj.getSelectedNodes()
+          if (nodes.length) {
+            ztreeObj.checkNode(nodes[0], false, false, true)
+          }
+        }
+        const selectArr = this.selelctedFilterArr
         for (let i = 0; i < selectArr.length; i++) {
           const node = ztreeObj.getNodeByParam('id', selectArr[i].id, null)
           ztreeObj.checkNode(node, true, true)
-        }
-      } else {
-        if (ztreeObj) {
-          ztreeObj.checkAllNodes(false)
         }
       }
     },
     // 选择autocomplate 列表选项的回调
     handleSelect (item) {
       this.inputVisible = false
-      if (this.selectedIds.indexOf(item.id) === -1) {
+      let isSelected = false
+      for (const selectedItem of this.selectedArr) {
+        if (selectedItem.id === item.id) {
+          isSelected = true
+          break
+        }
+      }
+      if (!isSelected) {
         this.selectedArr.push(item)
-        this.selectedIds += item.id + ','
       }
     },
     // 返回autocomplete 的结果集
@@ -415,6 +473,9 @@ export default {
     // ztree checkbox 选中
     onCheck (event, treeId, treeNode) {
       if (treeNode.checked) {
+        if (this.single) {
+          this.selelctedFilterArr = []
+        }
         const node = {
           id: treeNode.id,
           pid: treeNode.pId,
@@ -430,6 +491,7 @@ export default {
         for (let i = 0; i < this.selelctedFilterArr.length; i++) {
           if (treeNode.id === this.selelctedFilterArr[i].id) {
             this.selelctedFilterArr.splice(i, 1)
+            break
           }
         }
       }
@@ -437,16 +499,11 @@ export default {
     // 选人列表删除选项
     delItem (index, id) {
       this.selelctedFilterArr.splice(index, 1)
-      if (this.orgUserTree) {
-        this.cancelTreeSelected(this.orgUserTree, id)
-        return
-      }
-      if (this.groupTree) {
-        this.cancelTreeSelected(this.groupTree, id)
-        return
-      }
-      if (this.myGroupTree) {
-        this.cancelTreeSelected(this.myGroupTree, id)
+      for (const role of this.tabRoles) {
+        if (this[role + 'Tree']) {
+          this.cancelTreeSelected(this[role + 'Tree'], id)
+          return
+        }
       }
     },
     cancelTreeSelected (ztreeObj, id) {
@@ -458,6 +515,9 @@ export default {
       this.selectedArr = this.selelctedFilterArr
       this.$emit('input', this.selectedArr)
       this.dialogVisible = false
+    },
+    handleClearSearchValue (name) {
+      this.$refs[name + 'SearchInput'].activated = true
     }
   }
 }
