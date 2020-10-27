@@ -186,6 +186,11 @@ export default {
     title: {
       type: String,
       default: '选择成员对象'
+    },
+    // 只选年级不选校区
+    gradeOnly: {
+      type: Boolean,
+      default: false
     }
   },
   data () {
@@ -287,9 +292,11 @@ export default {
         this.searchTree(value, treeName)
       }
     },
-    searchTree (value, treeName) {
-      const treeObj = this[treeName + 'Tree']
-      this[treeName + 'Nodes'] = treeObj.getNodesByParamFuzzy('name', value, null)
+    searchTree (queryString, treeName) {
+      // const treeObj = this[treeName + 'Tree']
+      // this[treeName + 'Nodes'] = treeObj.getNodesByParamFuzzy('name', queryString, null)
+      const inputSearchList = this[treeName + 'SearchNodes']
+      this[treeName + 'Nodes'] = queryString ? inputSearchList.filter(this.createFilter(queryString)) : inputSearchList
     },
     handleIconClick () {
 
@@ -390,7 +397,15 @@ export default {
       if (this.usersOnly) {
         // 遍历所有的节点，如果该节点popcode != user则禁用单/复选框
         for (let i = 0; i < nodes_all.length; i++) {
-          if (nodes_all[i].popCode !== "user") {
+          if (nodes_all[i].popCode !== 'user') {
+            ztreeObj.setChkDisabled(nodes_all[i], true, false, false);
+          }
+        }
+      }
+      if (this.gradeOnly) {
+        // 遍历所有的节点，如果该节点popcode != grade则禁用单/复选框
+        for (let i = 0; i < nodes_all.length; i++) {
+          if (nodes_all[i].popCode !== 'grade') {
             ztreeObj.setChkDisabled(nodes_all[i], true, false, false);
           }
         }
@@ -411,7 +426,7 @@ export default {
         const selectArr = this.selelctedFilterArr
         for (let i = 0; i < selectArr.length; i++) {
           const node = ztreeObj.getNodeByParam('id', selectArr[i].id, null)
-          ztreeObj.checkNode(node, true, true)
+          node && ztreeObj.checkNode(node, true, true)
         }
       }
     },
