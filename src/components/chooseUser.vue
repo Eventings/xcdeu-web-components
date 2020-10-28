@@ -425,8 +425,16 @@ export default {
         }
         const selectArr = this.selelctedFilterArr
         for (let i = 0; i < selectArr.length; i++) {
-          const node = ztreeObj.getNodeByParam('id', selectArr[i].id, null)
-          node && ztreeObj.checkNode(node, true, true)
+          const nodes = ztreeObj.getNodesByParam('id', selectArr[i].id, null)
+          if ( nodes.length > 0 ) {
+            for(let j = 0; j < nodes.length; j++) {
+              ztreeObj.checkNode(nodes[j], true, false, false)
+              if (nodes[j].getParentNode() !== null) {
+                let parentNode = nodes[j].getParentNode() //获取父节点
+                ztreeObj.expandNode(parentNode, true, false, false, false)
+              }
+            }
+          }
         }
       }
     },
@@ -488,6 +496,12 @@ export default {
     // ztree checkbox 选中
     onCheck (event, treeId, treeNode) {
       if (treeNode.checked) {
+        // 如果同一人有多个组织，不重复添加
+        for (let i = 0; i < this.selelctedFilterArr.length; i++) {
+          if (this.selelctedFilterArr[i].id === treeNode.id) {
+            return
+          }
+        }
         if (this.single) {
           this.selelctedFilterArr = []
         }
@@ -503,6 +517,8 @@ export default {
         }
         this.selelctedFilterArr.push(node)
       } else {
+        // 如果同一人有多个组织，取消选择该人时取消所有
+        this.cancelTreeSelected(window.jQuery.fn.zTree.getZTreeObj(treeId), treeNode.id)
         for (let i = 0; i < this.selelctedFilterArr.length; i++) {
           if (treeNode.id === this.selelctedFilterArr[i].id) {
             this.selelctedFilterArr.splice(i, 1)
@@ -513,7 +529,12 @@ export default {
     },
     // 选人列表删除选项
     delItem (index, id) {
-      this.selelctedFilterArr.splice(index, 1)
+      for (let i = 0; i < this.selelctedFilterArr.length; i++) {
+        if (this.selelctedFilterArr[i].id === id) {
+          this.selelctedFilterArr.splice(i, 1)
+          break
+        }
+      }
       for (const role of this.tabRoles) {
         if (this[role + 'Tree']) {
           this.cancelTreeSelected(this[role + 'Tree'], id)
@@ -522,8 +543,14 @@ export default {
       }
     },
     cancelTreeSelected (ztreeObj, id) {
-      const node = ztreeObj.getNodeByParam('id', id, null)
-      ztreeObj.checkNode(node, false, false, true)
+      const nodes = ztreeObj.getNodesByParam('id', id, null)
+      if ( nodes.length > 0 ) {
+        for (let i = 0; i < nodes.length; i++) {
+          if (nodes[i].checked) {
+            ztreeObj.checkNode(nodes[i], false, false, false)
+          }
+        }
+      }
     },
     // 点击确定关闭模态框
     submitSelectedValue () {
