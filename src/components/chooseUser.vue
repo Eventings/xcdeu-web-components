@@ -126,7 +126,7 @@
           </el-input>
           <div>
             <p v-for="(item, index) in filterSelectedList" :key="index">
-              <span><i :class="'icon-' + item.iconSkin " /><em>{{ item.name }}</em></span><i class="icon-close-x" @click="delItem(index, item.id)" />
+              <span><i :class="'icon-' + item.iconSkin " /><em :title="item.fullOrgName">{{ item.name }}</em></span><i class="icon-close-x" @click="delItem(index, item.id)" />
             </p>
           </div>
         </div>
@@ -229,6 +229,9 @@ export default {
           radioType: "all"
         },
         data: {
+          key: {
+            name: 'name'
+          },
           simpleData: {
             enable: true,
             pIdKey: 'pId'
@@ -304,6 +307,8 @@ export default {
     treeSearch (queryString, cb) {
       const inputSearchList = this.orgUserSearchNodes
       const results = queryString ? inputSearchList.filter(this.createFilter(queryString)) : inputSearchList
+      // 如果搜索了就将结果加上组织信息便于辨认
+      this.setting.data.key.name = queryString ? 'fullOrgName' : 'name'
       // 调用 callback 返回建议列表的数据
       cb(results)
     },
@@ -343,9 +348,30 @@ export default {
           type: cmp
         }
         this.getUser(params).then(res => {
+          this.addFullOrgName(res)
           this[cmp + 'Nodes'] = res
-          this[cmp + 'SearchNodes'] = JSON.parse(JSON.stringify(res))
+          this[cmp + 'SearchNodes'] = res
         })
+      }
+    },
+    // 给数据添加完整组织供搜索时展示
+    addFullOrgName (dataArr) {
+      for (let i = 0; i < dataArr.length; i++) {
+        var pId = dataArr[i].pId
+        var fullOrgName = []
+        while (pId !== '-1' && pId !== '') {
+          for (let j = 0; j < dataArr.length; j++) {
+            if (pId === dataArr[j].id) {
+              fullOrgName.push(dataArr[j].name)
+              pId = dataArr[j].pId
+              break
+            }
+          }
+        }
+        dataArr[i].fullOrgName = dataArr[i].name
+        if (fullOrgName.length) {
+          dataArr[i].fullOrgName += ' <' + fullOrgName.reverse().join('-') + '>'
+        }
       }
     },
     // 初始化树 的全选 节点
@@ -513,7 +539,8 @@ export default {
           orgName: treeNode.orgName,
           iconSkin: treeNode.iconSkin,
           canSelect: treeNode.canSelect,
-          open: treeNode.open
+          open: treeNode.open,
+          fullOrgName: treeNode.fullOrgName
         }
         this.selelctedFilterArr.push(node)
       } else {
