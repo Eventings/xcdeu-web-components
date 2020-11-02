@@ -561,6 +561,9 @@ export default {
     },
     // 搜索显示输入框
     showInput () {
+      if (this.disabled) {
+        return
+      }
       if (this.allowWrite) {
         this.inputVisible = true
         this.$nextTick(function () {
