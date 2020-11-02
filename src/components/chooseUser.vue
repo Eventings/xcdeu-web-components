@@ -42,7 +42,11 @@
       :close-on-click-modal="false"
     >
       <div class="choose-selector">
-        <el-button type="text" style="position: absolute; right: 0; top: 0; z-index: 1" @click="clearAll">全部清空</el-button>
+        <!-- <el-button
+          type="text"
+          style="position: absolute; right: 0; top: 0; z-index: 1"
+          @click="clearAll"
+        >全部清空</el-button>-->
 
         <el-tabs v-model="activeName">
           <el-tab-pane v-if="tabRoles.includes('orgUser')" label="组织" name="orgUser">
@@ -59,11 +63,7 @@
                 @clear="handleClearSearchValue('orgUser')"
                 :validate-event="false"
               >
-                <i
-                  slot="prefix"
-                  class="el-icon-search el-input__icon"
-                  @click="handleIconClick"
-                />
+                <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
                   <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
                 </template>
@@ -80,6 +80,22 @@
           </el-tab-pane>
           <el-tab-pane v-if="tabRoles.includes('group')" label="群组" name="group">
             <div class="choose-selector-select-container">
+              <el-autocomplete
+                ref="groupSearchInput"
+                popper-class="my-autocomplete"
+                :select-when-unmatched="true"
+                placeholder="快速查找群组"
+                @select="(item) => handleTreeSelect(item, 'group')"
+                clearable
+                @clear="handleClearSearchValue('group')"
+                :validate-event="false"
+                style="visibility: hidden;"
+              >
+                <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
+                <template slot-scope="{ item }">
+                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                </template>
+              </el-autocomplete>
               <tree
                 ref="groupNodes"
                 :nodes="groupNodes"
@@ -92,6 +108,22 @@
           </el-tab-pane>
           <el-tab-pane v-if="tabRoles.includes('grade')" label="年级" name="grade">
             <div class="choose-selector-select-container">
+              <el-autocomplete
+                ref="gradeSearchInput"
+                popper-class="my-autocomplete"
+                :select-when-unmatched="true"
+                placeholder="快速查找年级"
+                @select="(item) => handleTreeSelect(item, 'grade')"
+                clearable
+                @clear="handleClearSearchValue('grade')"
+                :validate-event="false"
+                style="visibility: hidden;"
+              >
+                <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
+                <template slot-scope="{ item }">
+                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                </template>
+              </el-autocomplete>
               <tree
                 ref="gradeNodes"
                 :nodes="gradeNodes"
@@ -104,6 +136,22 @@
           </el-tab-pane>
           <el-tab-pane v-if="tabRoles.includes('myGroup')" label="我的群组" name="myGroup">
             <div class="choose-selector-select-container">
+              <el-autocomplete
+                ref="myGroupSearchInput"
+                popper-class="my-autocomplete"
+                :select-when-unmatched="true"
+                placeholder="快速查找我的群组"
+                @select="(item) => handleTreeSelect(item, 'myGroup')"
+                clearable
+                @clear="handleClearSearchValue('myGroup')"
+                :validate-event="false"
+                style="visibility: hidden;"
+              >
+                <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
+                <template slot-scope="{ item }">
+                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                </template>
+              </el-autocomplete>
               <tree
                 ref="myGroupNodes"
                 :nodes="myGroupNodes"
@@ -117,6 +165,7 @@
         </el-tabs>
         <div class="choose-selector-selected-container">
           <el-input
+            class="ipt"
             v-model="selectedSearchValue"
             placeholder="快速查找"
             clearable
@@ -124,9 +173,18 @@
           >
             <i slot="prefix" class="el-input__icon el-icon-search" />
           </el-input>
-          <div>
-            <p v-for="(item, index) in filterSelectedList" :key="index">
-              <span><i :class="'icon-' + item.iconSkin " /><em :title="item.fullOrgName">{{ item.name }}</em></span><i class="icon-close-x" @click="delItem(index, item.id)" />
+          <el-button
+            type="text"
+            style="position: absolute; right: 0; top: 0; z-index: 1"
+            @click="clearAll"
+          >全部清空</el-button>
+          <div class="selected-box">
+            <p v-for="(item, index) in filterSelectedList" :key="index" class="selected-item">
+              <span>
+                <i :class="'icon-' + item.iconSkin " />
+                <em :title="item.fullOrgName">{{ item.name }}</em>
+              </span>
+              <i class="icon-close-x" @click="delItem(index, item.id)" />
             </p>
           </div>
         </div>
@@ -591,3 +649,31 @@ export default {
   }
 }
 </script>
+<style lang="scss" scoped>
+.choose-selector-select-container {
+  width: 40%;
+  padding-right: 0;
+}
+.ipt {
+  width: 215px;
+}
+.choose-selector {
+  >>> .el-tab-pane {
+    padding-left: 5%;
+  }
+  .ztree, .selected-box {
+    border: 1px solid #ccc;
+    border-radius: 3%;
+    height: 300px;
+    margin-top: 9px;
+  }
+  .choose-selector-selected-container {
+    right: 5%;
+    .selected-box {
+      .selected-item {
+        height: 22px;
+      }
+    }
+  }
+}
+</style>
