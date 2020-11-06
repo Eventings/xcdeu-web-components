@@ -5,7 +5,7 @@
         <el-tag
           v-for="tag in dynamicTags"
           :key="tag"
-          closable
+          :closable="!disabled"
           :disable-transitions="false"
           @close="handleClose(tag)"
         >
@@ -42,7 +42,11 @@
       :close-on-click-modal="false"
     >
       <div class="choose-selector">
-        <el-button type="text" style="position: absolute; right: 0; top: 0; z-index: 1" @click="clearAll">全部清空</el-button>
+        <!-- <el-button
+          type="text"
+          style="position: absolute; right: 0; top: 0; z-index: 1"
+          @click="clearAll"
+        >全部清空</el-button>-->
 
         <el-tabs v-model="activeName">
           <el-tab-pane v-if="tabRoles.includes('orgUser')" label="组织" name="orgUser">
@@ -59,11 +63,7 @@
                 @clear="handleClearSearchValue('orgUser')"
                 :validate-event="false"
               >
-                <i
-                  slot="prefix"
-                  class="el-icon-search el-input__icon"
-                  @click="handleIconClick"
-                />
+                <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
                   <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
                 </template>
@@ -80,6 +80,22 @@
           </el-tab-pane>
           <el-tab-pane v-if="tabRoles.includes('group')" label="群组" name="group">
             <div class="choose-selector-select-container">
+              <el-autocomplete
+                ref="groupSearchInput"
+                popper-class="my-autocomplete"
+                :select-when-unmatched="true"
+                placeholder="快速查找群组"
+                @select="(item) => handleTreeSelect(item, 'group')"
+                clearable
+                @clear="handleClearSearchValue('group')"
+                :validate-event="false"
+                style="visibility: hidden;"
+              >
+                <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
+                <template slot-scope="{ item }">
+                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                </template>
+              </el-autocomplete>
               <tree
                 ref="groupNodes"
                 :nodes="groupNodes"
@@ -92,6 +108,22 @@
           </el-tab-pane>
           <el-tab-pane v-if="tabRoles.includes('grade')" label="年级" name="grade">
             <div class="choose-selector-select-container">
+              <el-autocomplete
+                ref="gradeSearchInput"
+                popper-class="my-autocomplete"
+                :select-when-unmatched="true"
+                placeholder="快速查找年级"
+                @select="(item) => handleTreeSelect(item, 'grade')"
+                clearable
+                @clear="handleClearSearchValue('grade')"
+                :validate-event="false"
+                style="visibility: hidden;"
+              >
+                <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
+                <template slot-scope="{ item }">
+                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                </template>
+              </el-autocomplete>
               <tree
                 ref="gradeNodes"
                 :nodes="gradeNodes"
@@ -104,6 +136,22 @@
           </el-tab-pane>
           <el-tab-pane v-if="tabRoles.includes('myGroup')" label="我的群组" name="myGroup">
             <div class="choose-selector-select-container">
+              <el-autocomplete
+                ref="myGroupSearchInput"
+                popper-class="my-autocomplete"
+                :select-when-unmatched="true"
+                placeholder="快速查找我的群组"
+                @select="(item) => handleTreeSelect(item, 'myGroup')"
+                clearable
+                @clear="handleClearSearchValue('myGroup')"
+                :validate-event="false"
+                style="visibility: hidden;"
+              >
+                <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
+                <template slot-scope="{ item }">
+                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                </template>
+              </el-autocomplete>
               <tree
                 ref="myGroupNodes"
                 :nodes="myGroupNodes"
@@ -117,6 +165,7 @@
         </el-tabs>
         <div class="choose-selector-selected-container">
           <el-input
+            class="ipt"
             v-model="selectedSearchValue"
             placeholder="快速查找"
             clearable
@@ -124,9 +173,18 @@
           >
             <i slot="prefix" class="el-input__icon el-icon-search" />
           </el-input>
-          <div>
-            <p v-for="(item, index) in filterSelectedList" :key="index">
-              <span><i :class="'icon-' + item.iconSkin " /><em>{{ item.name }}</em></span><i class="icon-close-x" @click="delItem(index, item.id)" />
+          <el-button
+            type="text"
+            style="position: absolute; right: 0; top: 0; z-index: 1"
+            @click="clearAll"
+          >全部清空</el-button>
+          <div class="selected-box">
+            <p v-for="(item, index) in filterSelectedList" :key="index" class="selected-item">
+              <span>
+                <i :class="'icon-' + item.iconSkin " />
+                <em :title="item.fullOrgName">{{ item.name }}</em>
+              </span>
+              <i class="icon-close-x" @click="delItem(index, item.id)" />
             </p>
           </div>
         </div>
@@ -186,6 +244,11 @@ export default {
     title: {
       type: String,
       default: '选择成员对象'
+    },
+    // 只选年级不选校区
+    gradeOnly: {
+      type: Boolean,
+      default: false
     }
   },
   data () {
@@ -224,6 +287,9 @@ export default {
           radioType: "all"
         },
         data: {
+          key: {
+            name: 'name'
+          },
           simpleData: {
             enable: true,
             pIdKey: 'pId'
@@ -287,9 +353,11 @@ export default {
         this.searchTree(value, treeName)
       }
     },
-    searchTree (value, treeName) {
-      const treeObj = this[treeName + 'Tree']
-      this[treeName + 'Nodes'] = treeObj.getNodesByParamFuzzy('name', value, null)
+    searchTree (queryString, treeName) {
+      // const treeObj = this[treeName + 'Tree']
+      // this[treeName + 'Nodes'] = treeObj.getNodesByParamFuzzy('name', queryString, null)
+      const inputSearchList = this[treeName + 'SearchNodes']
+      this[treeName + 'Nodes'] = queryString ? inputSearchList.filter(this.createFilter(queryString)) : inputSearchList
     },
     handleIconClick () {
 
@@ -297,6 +365,8 @@ export default {
     treeSearch (queryString, cb) {
       const inputSearchList = this.orgUserSearchNodes
       const results = queryString ? inputSearchList.filter(this.createFilter(queryString)) : inputSearchList
+      // 如果搜索了就将结果加上组织信息便于辨认
+      this.setting.data.key.name = queryString ? 'fullOrgName' : 'name'
       // 调用 callback 返回建议列表的数据
       cb(results)
     },
@@ -336,9 +406,30 @@ export default {
           type: cmp
         }
         this.getUser(params).then(res => {
+          this.addFullOrgName(res)
           this[cmp + 'Nodes'] = res
-          this[cmp + 'SearchNodes'] = JSON.parse(JSON.stringify(res))
+          this[cmp + 'SearchNodes'] = res
         })
+      }
+    },
+    // 给数据添加完整组织供搜索时展示
+    addFullOrgName (dataArr) {
+      for (let i = 0; i < dataArr.length; i++) {
+        var pId = dataArr[i].pId
+        var fullOrgName = []
+        while (pId !== '-1' && pId !== '') {
+          for (let j = 0; j < dataArr.length; j++) {
+            if (pId === dataArr[j].id) {
+              fullOrgName.push(dataArr[j].name)
+              pId = dataArr[j].pId
+              break
+            }
+          }
+        }
+        dataArr[i].fullOrgName = dataArr[i].name
+        if (fullOrgName.length) {
+          dataArr[i].fullOrgName += ' <' + fullOrgName.reverse().join('-') + '>'
+        }
       }
     },
     // 初始化树 的全选 节点
@@ -390,7 +481,15 @@ export default {
       if (this.usersOnly) {
         // 遍历所有的节点，如果该节点popcode != user则禁用单/复选框
         for (let i = 0; i < nodes_all.length; i++) {
-          if (nodes_all[i].popCode !== "user") {
+          if (nodes_all[i].popCode !== 'user') {
+            ztreeObj.setChkDisabled(nodes_all[i], true, false, false);
+          }
+        }
+      }
+      if (this.gradeOnly) {
+        // 遍历所有的节点，如果该节点popcode != grade则禁用单/复选框
+        for (let i = 0; i < nodes_all.length; i++) {
+          if (nodes_all[i].popCode !== 'grade') {
             ztreeObj.setChkDisabled(nodes_all[i], true, false, false);
           }
         }
@@ -410,8 +509,16 @@ export default {
         }
         const selectArr = this.selelctedFilterArr
         for (let i = 0; i < selectArr.length; i++) {
-          const node = ztreeObj.getNodeByParam('id', selectArr[i].id, null)
-          ztreeObj.checkNode(node, true, true)
+          const nodes = ztreeObj.getNodesByParam('id', selectArr[i].id, null)
+          if ( nodes.length > 0 ) {
+            for(let j = 0; j < nodes.length; j++) {
+              ztreeObj.checkNode(nodes[j], true, false, false)
+              if (nodes[j].getParentNode() !== null) {
+                let parentNode = nodes[j].getParentNode() //获取父节点
+                ztreeObj.expandNode(parentNode, true, false, false, false)
+              }
+            }
+          }
         }
       }
     },
@@ -454,6 +561,9 @@ export default {
     },
     // 搜索显示输入框
     showInput () {
+      if (this.disabled) {
+        return
+      }
       if (this.allowWrite) {
         this.inputVisible = true
         this.$nextTick(function () {
@@ -473,6 +583,12 @@ export default {
     // ztree checkbox 选中
     onCheck (event, treeId, treeNode) {
       if (treeNode.checked) {
+        // 如果同一人有多个组织，不重复添加
+        for (let i = 0; i < this.selelctedFilterArr.length; i++) {
+          if (this.selelctedFilterArr[i].id === treeNode.id) {
+            return
+          }
+        }
         if (this.single) {
           this.selelctedFilterArr = []
         }
@@ -484,10 +600,13 @@ export default {
           orgName: treeNode.orgName,
           iconSkin: treeNode.iconSkin,
           canSelect: treeNode.canSelect,
-          open: treeNode.open
+          open: treeNode.open,
+          fullOrgName: treeNode.fullOrgName
         }
         this.selelctedFilterArr.push(node)
       } else {
+        // 如果同一人有多个组织，取消选择该人时取消所有
+        this.cancelTreeSelected(window.jQuery.fn.zTree.getZTreeObj(treeId), treeNode.id)
         for (let i = 0; i < this.selelctedFilterArr.length; i++) {
           if (treeNode.id === this.selelctedFilterArr[i].id) {
             this.selelctedFilterArr.splice(i, 1)
@@ -498,7 +617,12 @@ export default {
     },
     // 选人列表删除选项
     delItem (index, id) {
-      this.selelctedFilterArr.splice(index, 1)
+      for (let i = 0; i < this.selelctedFilterArr.length; i++) {
+        if (this.selelctedFilterArr[i].id === id) {
+          this.selelctedFilterArr.splice(i, 1)
+          break
+        }
+      }
       for (const role of this.tabRoles) {
         if (this[role + 'Tree']) {
           this.cancelTreeSelected(this[role + 'Tree'], id)
@@ -507,8 +631,14 @@ export default {
       }
     },
     cancelTreeSelected (ztreeObj, id) {
-      const node = ztreeObj.getNodeByParam('id', id, null)
-      ztreeObj.checkNode(node, false, false, true)
+      const nodes = ztreeObj.getNodesByParam('id', id, null)
+      if ( nodes.length > 0 ) {
+        for (let i = 0; i < nodes.length; i++) {
+          if (nodes[i].checked) {
+            ztreeObj.checkNode(nodes[i], false, false, false)
+          }
+        }
+      }
     },
     // 点击确定关闭模态框
     submitSelectedValue () {
@@ -522,3 +652,31 @@ export default {
   }
 }
 </script>
+<style lang="scss" scoped>
+.choose-selector-select-container {
+  width: 40%;
+  padding-right: 0;
+}
+.ipt {
+  width: 215px;
+}
+.choose-selector {
+  >>> .el-tab-pane {
+    padding-left: 5%;
+  }
+  .ztree, .selected-box {
+    border: 1px solid #ccc;
+    border-radius: 3%;
+    height: 300px;
+    margin-top: 9px;
+  }
+  .choose-selector-selected-container {
+    right: 5%;
+    .selected-box {
+      .selected-item {
+        height: 22px;
+      }
+    }
+  }
+}
+</style>
