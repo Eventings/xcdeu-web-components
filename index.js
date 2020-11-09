@@ -1,6 +1,8 @@
 import chooseUser from './src/components/chooseUser'
 import fileUp from './src/components/FileUp'
 import editor from './src/components/editor'
+import logo from './src/components/Logo'
+import user from './src/components/User'
 
 const XcComponents = {
   path: function(){
@@ -22,11 +24,10 @@ const XcComponents = {
     Vue.component(chooseUser.name, chooseUser)
     Vue.component(fileUp.name, fileUp)
     Vue.component(editor.name, editor)
+    Vue.component(logo.name, logo)
+    Vue.component(user.name, user)
   }
 }
-
-//暴露XcComponents
-window.XcComponents = XcComponents
 
 if ('Vue' in window) {
   Vue.use(XcComponents)

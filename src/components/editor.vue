@@ -11,24 +11,54 @@
         content_css: publicPath + 'tinymce/skins/content/default/content.css',
         menubar: true,
         toolbar:
-          'undo redo | formatselect | bold italic backcolor | \
+          'undo redo | \
+          fontselect fontsizeselect formatselect | \
+          bold italic underline strikethrough superscript subscript codeformat | \
           alignleft aligncenter alignright alignjustify | \
-          bullist numlist outdent indent | removeformat | \
-          image | wordcount',
-        plugins: 'image wordcount',
+          outdent indent | \
+          forecolor backcolor removeformat | \
+          numlist bullist | \
+          code | \
+          charmap emoticons hr nonbreaking insertdatetime | \
+          fullscreen  preview print | \
+          image link codesample table | \
+          ltr rtl | \
+          wordcount',
+        toolbar_mode: 'sliding',
+        plugins: 'searchreplace paste lists advlist code charmap emoticons hr nonbreaking insertdatetime fullscreen preview print image link codesample table directionality wordcount help',
         image_description: false,
         images_reuse_filename: true,
         images_upload_handler: fileUpLoad,
+        file_picker_types: 'file',
+        file_picker_callback: filePickerCallback,
+        emoticons_database_url: publicPath + 'tinymce/plugins/emoticons/emojis.min.js',
         elementpath: false,
         branding: false
       }"
       @input="editorChange"
       :disabled="disabled"
     />
+    <el-dialog
+      v-if="attachPercentage !== -1"
+      title="正在上传..."
+      :visible="attachPercentage !== -1"
+      width="30%"
+      :show-close="false"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      append-to-body>
+      <div class="tx-c">
+        <el-progress type="circle" :percentage="attachPercentage"></el-progress>
+      </div>
+      <div class="tx-c margin-top-size-nomal">
+        <el-button @click="attachCancelHandler">取 消</el-button>
+      </div>
+    </el-dialog>
   </section>
 </template>
 
 <script>
+import { getOSSKey } from '@/api/index'
 // Import TinyMCE
 import 'tinymce/tinymce'
 // Default icons are required for TinyMCE 5.3 or above
@@ -36,14 +66,33 @@ import 'tinymce/icons/default'
 // A theme is also required
 import 'tinymce/themes/silver'
 // Any plugins you want to use has to be imported
+import 'tinymce/plugins/searchreplace'
+import 'tinymce/plugins/paste'
+import 'tinymce/plugins/lists'
+import 'tinymce/plugins/advlist'
+import 'tinymce/plugins/code'
+import 'tinymce/plugins/charmap'
+import 'tinymce/plugins/emoticons'
+import 'tinymce/plugins/hr'
+import 'tinymce/plugins/nonbreaking'
+import 'tinymce/plugins/insertdatetime'
+import 'tinymce/plugins/fullscreen'
+import 'tinymce/plugins/preview'
+import 'tinymce/plugins/print'
 import 'tinymce/plugins/image'
+import 'tinymce/plugins/link'
+import 'tinymce/plugins/codesample'
+import 'tinymce/plugins/table'
+import 'tinymce/plugins/directionality'
 import 'tinymce/plugins/wordcount'
+import 'tinymce/plugins/help'
 import editor from '@tinymce/tinymce-vue'
 
 import OSS from 'ali-oss'
 import { v4 as uuidv4 } from 'uuid'
 
-let PATH = null
+const region = 'oss-cn-shenzhen'
+const bucket = 'gtyzfile'
 
 export default {
   name: 'Editor',
@@ -64,7 +113,8 @@ export default {
     return {
       publicPath: window.XcComponents.path + 'public/',
       client: null,
-      htmlContent: ''
+      htmlContent: '',
+      attachPercentage: -1
     }
   },
   watch: {
@@ -79,30 +129,96 @@ export default {
     editorChange (value) {
       this.$emit('input', value)
     },
-    fileUpLoad (blobInfo, success, failure, progress) {
-      if (!PATH) {
-        PATH = 'tinyMCE/img/'
-      }
-      if (!this.client) {
-        this.client = new OSS({
-          region: 'oss-cn-shenzhen',
-          accessKeyId: 'LTAI4G2nbEWcDi9djnDY8tvJ',
-          accessKeySecret: 'ZZN02tVv7BpJEhc5bWa2NlNIdL6Vvp',
-          bucket: 'gtyzfile'
-        })
-      }
-      const id = uuidv4().replace(/-/g, '')
-      const rawFile = blobInfo.blob()
-      const fileName = id + rawFile.name.substring(rawFile.name.lastIndexOf('.'))
-      this.client.multipartUpload(PATH + fileName, rawFile, {
-        progress: p => {
-          progress(p * 100)
+    getClient () {
+      return new Promise((resolve, reject) => {
+        if (!this.client) {
+          getOSSKey().then(res => {
+            this.client = new OSS({
+              region: region,
+              accessKeyId: res.accessKeyId,
+              accessKeySecret: res.accessKeySecret,
+              bucket: bucket
+            })
+            resolve(this.client)
+          }).catch(() => reject())
+        } else {
+          resolve(this.client)
         }
-      }).then(res => {
-        success(res.res.requestUrls[0].replace(/\?.*/g, ''))
-      }).catch(err => {
-        failure('Image upload failed due to a XHR Transport error. Code: ' + err)
       })
+    },
+    fileUpLoad (blobInfo, success, failure, progress, type) {
+      let path = 'tinyMCE/img/'
+      if (type === 'attach') {
+        path = 'tinyMCE/file/'
+      }
+      this.getClient().then(client => {
+        const id = uuidv4().replace(/-/g, '')
+        const rawFile = blobInfo.blob()
+        const fileName = id + rawFile.name.substring(rawFile.name.lastIndexOf('.'))
+        client.multipartUpload(path + fileName, rawFile, {
+          progress: p => {
+            progress(p * 100)
+          }
+        }).then(res => {
+          success(res.res.requestUrls[0].replace(/\?.*/g, ''))
+        }).catch(err => {
+          failure('Image upload failed due to a XHR Transport error. Code: ' + err)
+        })
+      })
+    },
+    filePickerCallback (cb, value, meta) {
+      var that = this;
+      var input = document.createElement('input');
+      input.setAttribute('type', 'file');
+      // input.setAttribute('accept', 'image/*');
+
+      /*
+        Note: In modern browsers input[type="file"] is functional without
+        even adding it to the DOM, but that might not be the case in some older
+        or quirky browsers like IE, so you might want to add it to the DOM
+        just in case, and visually hide it. And do not forget do remove it
+        once you do not need it anymore.
+      */
+      input.style.display = 'none';
+      document.body.appendChild(input);
+
+      input.onchange = function () {
+        var file = this.files[0];
+
+        var reader = new FileReader();
+        reader.onload = function () {
+          /*
+            Note: Now we need to register the blob in TinyMCEs image blob
+            registry. In the next release this part hopefully won't be
+            necessary, as we are looking to handle it internally.
+          */
+          var id = 'blobid' + (new Date()).getTime();
+          var blobCache = tinymce.activeEditor.editorUpload.blobCache;
+          var base64 = reader.result.split(',')[1];
+          var blobInfo = blobCache.create(id, file, base64);
+          // blobCache.add(blobInfo);
+          that.fileUpLoad(blobInfo, function (url) {
+            /* call the callback and populate the Text field with the file name */
+            cb(url, { text: file.name });
+            that.attachPercentage = -1
+            document.body.removeChild(input);
+          }, function () {
+            cb('', { text: '附件上传失败，请重试' });
+            that.attachPercentage = -1
+            document.body.removeChild(input);
+          }, function (percentage) {
+            that.attachPercentage = percentage
+          }, 'attach');
+        };
+        reader.readAsDataURL(file);
+      };
+
+      input.click();
+    },
+    attachCancelHandler () {
+      // 暂停分片上传。
+      this.client.cancel();
+      this.attachPercentage = -1
     }
   }
 }

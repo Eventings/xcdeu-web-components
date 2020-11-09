@@ -5,7 +5,7 @@
         <el-tag
           v-for="tag in dynamicTags"
           :key="tag"
-          closable
+          :closable="!disabled"
           :disable-transitions="false"
           @close="handleClose(tag)"
         >
@@ -19,7 +19,7 @@
           size="small"
           :highlight-first-item="true"
           :fetch-suggestions="querySearchAsync"
-          :select-when-unmatched="true"
+          :select-when-unmatched="false"
           @select="handleSelect"
           @change="changeSelect"
         >
@@ -28,38 +28,42 @@
           </template>
         </el-autocomplete>
       </div>
-      <el-button slot="append" @click.native="chooseUser">...</el-button>
+      <el-button slot="append" :disabled="disabled" @click.native="chooseUser">...</el-button>
     </div>
     <el-dialog
-      title="选择成员对象"
+      :title="title"
       :visible.sync="dialogVisible"
       width="1000"
       top="0"
       class="abow_dialog"
       :fullscreen="isFullScreen"
       @open="openChooseUserModal"
+      append-to-body
+      :close-on-click-modal="false"
     >
-      <!-- <span>这是一段信息</span> -->
       <div class="choose-selector">
-        <el-button type="text" style="position: absolute; right: 0; top: 0; z-index: 1" @click="clearAll">全部清空</el-button>
+        <!-- <el-button
+          type="text"
+          style="position: absolute; right: 0; top: 0; z-index: 1"
+          @click="clearAll"
+        >全部清空</el-button>-->
 
         <el-tabs v-model="activeName">
-          <el-tab-pane v-if="tabRoles.includes('orgUser')" label="组织" name="org">
+          <el-tab-pane v-if="tabRoles.includes('orgUser')" label="组织" name="orgUser">
             <div class="choose-selector-select-container">
               <el-autocomplete
+                ref="orgUserSearchInput"
                 v-model="orgUserSearchValue"
                 popper-class="my-autocomplete"
                 :fetch-suggestions="treeSearch"
                 :select-when-unmatched="true"
                 placeholder="快速查找组织与人"
-                clearable
                 @select="(item) => handleTreeSelect(item, 'orgUser')"
+                clearable
+                @clear="handleClearSearchValue('orgUser')"
+                :validate-event="false"
               >
-                <i
-                  slot="prefix"
-                  class="el-icon-search el-input__icon"
-                  @click="handleIconClick"
-                />
+                <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
                   <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
                 </template>
@@ -76,6 +80,22 @@
           </el-tab-pane>
           <el-tab-pane v-if="tabRoles.includes('group')" label="群组" name="group">
             <div class="choose-selector-select-container">
+              <el-autocomplete
+                ref="groupSearchInput"
+                popper-class="my-autocomplete"
+                :select-when-unmatched="true"
+                placeholder="快速查找群组"
+                @select="(item) => handleTreeSelect(item, 'group')"
+                clearable
+                @clear="handleClearSearchValue('group')"
+                :validate-event="false"
+                style="visibility: hidden;"
+              >
+                <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
+                <template slot-scope="{ item }">
+                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                </template>
+              </el-autocomplete>
               <tree
                 ref="groupNodes"
                 :nodes="groupNodes"
@@ -86,8 +106,52 @@
               />
             </div>
           </el-tab-pane>
-          <el-tab-pane v-if="tabRoles.includes('myGroup')" label="我的群组" name="my">
+          <el-tab-pane v-if="tabRoles.includes('grade')" label="年级" name="grade">
             <div class="choose-selector-select-container">
+              <el-autocomplete
+                ref="gradeSearchInput"
+                popper-class="my-autocomplete"
+                :select-when-unmatched="true"
+                placeholder="快速查找年级"
+                @select="(item) => handleTreeSelect(item, 'grade')"
+                clearable
+                @clear="handleClearSearchValue('grade')"
+                :validate-event="false"
+                style="visibility: hidden;"
+              >
+                <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
+                <template slot-scope="{ item }">
+                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                </template>
+              </el-autocomplete>
+              <tree
+                ref="gradeNodes"
+                :nodes="gradeNodes"
+                :setting="setting"
+                @onCheck="onCheck"
+                @onCreated="(treeObj) => handleCreated(treeObj, 'gradeTree')"
+                @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'gradeTree')"
+              />
+            </div>
+          </el-tab-pane>
+          <el-tab-pane v-if="tabRoles.includes('myGroup')" label="我的群组" name="myGroup">
+            <div class="choose-selector-select-container">
+              <el-autocomplete
+                ref="myGroupSearchInput"
+                popper-class="my-autocomplete"
+                :select-when-unmatched="true"
+                placeholder="快速查找我的群组"
+                @select="(item) => handleTreeSelect(item, 'myGroup')"
+                clearable
+                @clear="handleClearSearchValue('myGroup')"
+                :validate-event="false"
+                style="visibility: hidden;"
+              >
+                <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
+                <template slot-scope="{ item }">
+                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                </template>
+              </el-autocomplete>
               <tree
                 ref="myGroupNodes"
                 :nodes="myGroupNodes"
@@ -101,14 +165,26 @@
         </el-tabs>
         <div class="choose-selector-selected-container">
           <el-input
+            class="ipt"
             v-model="selectedSearchValue"
             placeholder="快速查找"
+            clearable
+            :validate-event="false"
           >
             <i slot="prefix" class="el-input__icon el-icon-search" />
           </el-input>
-          <div>
-            <p v-for="(item, index) in filterSelectedList" :key="index">
-              <span><i :class="'icon-' + item.iconSkin " /><em>{{ item.name }}</em></span><i class="icon-close-x" @click="delItem(index, item.id)" />
+          <el-button
+            type="text"
+            style="position: absolute; right: 0; top: 0; z-index: 1"
+            @click="clearAll"
+          >全部清空</el-button>
+          <div class="selected-box">
+            <p v-for="(item, index) in filterSelectedList" :key="index" class="selected-item">
+              <span>
+                <i :class="'icon-' + item.iconSkin " />
+                <em :title="item.fullOrgName">{{ item.name }}</em>
+              </span>
+              <i class="icon-close-x" @click="delItem(index, item.id)" />
             </p>
           </div>
         </div>
@@ -122,6 +198,7 @@
 </template>
 <script>
 import tree from 'vue-giant-tree'
+import { getChooseUserDataByParams, getSearchListByValue } from '@/api/index'
 export default {
   name: 'chooseUser',
   components: { tree },
@@ -144,11 +221,34 @@ export default {
     },
     getUser: {
       type: Function,
-      required: true
+      default: getChooseUserDataByParams
     },
     getSearchList: {
       type: Function,
-      required: true
+      default: getSearchListByValue
+    },
+    disabled: {
+      type: Boolean,
+      default: false
+    },
+    // 单选
+    single: {
+      type: Boolean,
+      default: false
+    },
+    // 只选人不选组织
+    usersOnly: {
+      type: Boolean,
+      default: false
+    },
+    title: {
+      type: String,
+      default: '选择成员对象'
+    },
+    // 只选年级不选校区
+    gradeOnly: {
+      type: Boolean,
+      default: false
     }
   },
   data () {
@@ -156,22 +256,24 @@ export default {
       orgUserSearchValue: '',
       selectedSearchValue: '',
       dialogVisible: false,
-      activeName: 'org',
+      activeName: '',
       orgUserNodes: [],
       orgUserSearchNodes: [],
+      orgUserTree: null,
       groupNodes: [],
       groupSearchNodes: [],
+      groupTree: null,
       myGroupNodes: [],
       myGroupSearchNodes: [],
-      orgUserTree: null,
-      groupTree: null,
       myGroupTree: null,
+      gradeNodes: [],
+      gradeSearchNodes: [],
+      gradeTree: null,
       inputVisible: false,
       inputVal: '',
       inputSearchList: [],
       selectedArr: [],
       selelctedFilterArr: [],
-      selectedIds: '',
       tabRoles: [],
       setting: {
         dblClickExpand: false,
@@ -180,9 +282,14 @@ export default {
           chkboxType: {
             Y: '',
             N: ''
-          }
+          },
+          chkStyle: this.single ? 'radio' : 'checkbox',
+          radioType: "all"
         },
         data: {
+          key: {
+            name: 'name'
+          },
           simpleData: {
             enable: true,
             pIdKey: 'pId'
@@ -209,9 +316,7 @@ export default {
       const value = this.selectedSearchValue
       if (value) {
         return this.selelctedFilterArr.filter(function (item) {
-          if (item.name.toString().indexOf(value) !== -1) {
-            return item
-          }
+          return (item.name.toString().indexOf(value) !== -1)
         })
       }
       return this.selelctedFilterArr
@@ -248,9 +353,11 @@ export default {
         this.searchTree(value, treeName)
       }
     },
-    searchTree (value, treeName) {
-      const treeObj = this[treeName + 'Tree']
-      this[treeName + 'Nodes'] = treeObj.getNodesByParamFuzzy('name', value, null)
+    searchTree (queryString, treeName) {
+      // const treeObj = this[treeName + 'Tree']
+      // this[treeName + 'Nodes'] = treeObj.getNodesByParamFuzzy('name', queryString, null)
+      const inputSearchList = this[treeName + 'SearchNodes']
+      this[treeName + 'Nodes'] = queryString ? inputSearchList.filter(this.createFilter(queryString)) : inputSearchList
     },
     handleIconClick () {
 
@@ -258,6 +365,8 @@ export default {
     treeSearch (queryString, cb) {
       const inputSearchList = this.orgUserSearchNodes
       const results = queryString ? inputSearchList.filter(this.createFilter(queryString)) : inputSearchList
+      // 如果搜索了就将结果加上组织信息便于辨认
+      this.setting.data.key.name = queryString ? 'fullOrgName' : 'name'
       // 调用 callback 返回建议列表的数据
       cb(results)
     },
@@ -268,6 +377,7 @@ export default {
     },
     // 打开模态框 重新渲染已经选择的用户
     openChooseUserModal () {
+      this.activeName = this.tabRoles[0]
       this.selelctedFilterArr = JSON.parse(JSON.stringify(this.selectedArr))
       this.canceSelectAllBtns()
       for (const role of this.tabRoles) {
@@ -276,10 +386,10 @@ export default {
     },
     // 全部清空
     clearAll () {
-      this.canceSelectAllBtns()
       this.selelctedFilterArr = []
-      if (this.orgUserTree) {
-        this.orgUserTree.checkAllNodes(false)
+      this.canceSelectAllBtns()
+      for (const role of this.tabRoles) {
+        this.initTreeCheck(this[role + 'Tree'])
       }
     },
     // 清除所有树节点全选
@@ -296,13 +406,37 @@ export default {
           type: cmp
         }
         this.getUser(params).then(res => {
+          this.addFullOrgName(res)
           this[cmp + 'Nodes'] = res
-          this[cmp + 'SearchNodes'] = JSON.parse(JSON.stringify(res))
+          this[cmp + 'SearchNodes'] = res
         })
+      }
+    },
+    // 给数据添加完整组织供搜索时展示
+    addFullOrgName (dataArr) {
+      for (let i = 0; i < dataArr.length; i++) {
+        var pId = dataArr[i].pId
+        var fullOrgName = []
+        while (pId !== '-1' && pId !== '') {
+          for (let j = 0; j < dataArr.length; j++) {
+            if (pId === dataArr[j].id) {
+              fullOrgName.push(dataArr[j].name)
+              pId = dataArr[j].pId
+              break
+            }
+          }
+        }
+        dataArr[i].fullOrgName = dataArr[i].name
+        if (fullOrgName.length) {
+          dataArr[i].fullOrgName += ' <' + fullOrgName.reverse().join('-') + '>'
+        }
       }
     },
     // 初始化树 的全选 节点
     addDiyDom (treeId, treeNode) {
+      if (this.single) {
+        return;
+      }
       if (treeNode.isParent) {
         // 如果该节点为父节点 则在该节点后 新增全选按钮 点击全选 下面的子节点 全部被选中
         const allSelect = document.createElement('label')
@@ -315,21 +449,17 @@ export default {
         allSelect.appendChild(text)
         const selectNode = document.getElementById(treeNode.tId)
         selectNode.appendChild(allSelect)
-        const _that = this
+        const treeObj = window.jQuery.fn.zTree.getZTreeObj(treeId)
         checkbox.onclick = function () {
           const check = this.checked
           const treeNodes = treeNode.children
           if (check) {
             for (const node of treeNodes) {
-              if (_that.orgUserTree) {
-                _that.orgUserTree.checkNode(node, true, false, true)
-              }
+              treeObj.checkNode(node, true, false, true)
             }
           } else {
             for (const node of treeNodes) {
-              if (_that.orgUserTree) {
-                _that.orgUserTree.checkNode(node, false, false, true)
-              }
+              treeObj.checkNode(node, false, false, true)
             }
           }
         }
@@ -345,28 +475,65 @@ export default {
     },
     handleCreated (ztreeObj, cmd) {
       this[cmd] = ztreeObj
+      // 初始化设置禁用
+      let nodes_all = ztreeObj.getNodes(); //获取根节点下的子节点
+      nodes_all = ztreeObj.transformToArray(nodes_all);
+      if (this.usersOnly) {
+        // 遍历所有的节点，如果该节点popcode != user则禁用单/复选框
+        for (let i = 0; i < nodes_all.length; i++) {
+          if (nodes_all[i].popCode !== 'user') {
+            ztreeObj.setChkDisabled(nodes_all[i], true, false, false);
+          }
+        }
+      }
+      if (this.gradeOnly) {
+        // 遍历所有的节点，如果该节点popcode != grade则禁用单/复选框
+        for (let i = 0; i < nodes_all.length; i++) {
+          if (nodes_all[i].popCode !== 'grade') {
+            ztreeObj.setChkDisabled(nodes_all[i], true, false, false);
+          }
+        }
+      }
       this.initTreeCheck(ztreeObj)
     },
     // 初始化ztree选项
     initTreeCheck (ztreeObj) {
-      const selectArr = this.selelctedFilterArr
-      if (selectArr.length > 0) {
-        for (let i = 0; i < selectArr.length; i++) {
-          const node = ztreeObj.getNodeByParam('id', selectArr[i].id, null)
-          ztreeObj.checkNode(node, true, true)
+      if (ztreeObj) {
+        ztreeObj.checkAllNodes(false)
+        // 清空单选框
+        if (this.single) {
+          let nodes = ztreeObj.getSelectedNodes()
+          if (nodes.length) {
+            ztreeObj.checkNode(nodes[0], false, false, true)
+          }
         }
-      } else {
-        if (ztreeObj) {
-          ztreeObj.checkAllNodes(false)
+        const selectArr = this.selelctedFilterArr
+        for (let i = 0; i < selectArr.length; i++) {
+          const nodes = ztreeObj.getNodesByParam('id', selectArr[i].id, null)
+          if ( nodes.length > 0 ) {
+            for(let j = 0; j < nodes.length; j++) {
+              ztreeObj.checkNode(nodes[j], true, false, false)
+              if (nodes[j].getParentNode() !== null) {
+                let parentNode = nodes[j].getParentNode() //获取父节点
+                ztreeObj.expandNode(parentNode, true, false, false, false)
+              }
+            }
+          }
         }
       }
     },
     // 选择autocomplate 列表选项的回调
     handleSelect (item) {
       this.inputVisible = false
-      if (this.selectedIds.indexOf(item.id) === -1) {
+      let isSelected = false
+      for (const selectedItem of this.selectedArr) {
+        if (selectedItem.id === item.id) {
+          isSelected = true
+          break
+        }
+      }
+      if (!isSelected) {
         this.selectedArr.push(item)
-        this.selectedIds += item.id + ','
       }
     },
     // 返回autocomplete 的结果集
@@ -394,10 +561,17 @@ export default {
     },
     // 搜索显示输入框
     showInput () {
-      this.inputVisible = true
-      this.$nextTick(function () {
-        this.$refs.saveTagInput.focus()
-      })
+      if (this.disabled) {
+        return
+      }
+      if (this.allowWrite) {
+        this.inputVisible = true
+        this.$nextTick(function () {
+          this.$refs.saveTagInput.focus()
+        })
+      } else {
+        this.chooseUser()
+      }
     },
     // 打开选人模态框
     chooseUser () {
@@ -409,50 +583,100 @@ export default {
     // ztree checkbox 选中
     onCheck (event, treeId, treeNode) {
       if (treeNode.checked) {
+        // 如果同一人有多个组织，不重复添加
+        for (let i = 0; i < this.selelctedFilterArr.length; i++) {
+          if (this.selelctedFilterArr[i].id === treeNode.id) {
+            return
+          }
+        }
+        if (this.single) {
+          this.selelctedFilterArr = []
+        }
         const node = {
           id: treeNode.id,
           pid: treeNode.pId,
           name: treeNode.name,
-          popcode: treeNode.popcode,
+          popcode: treeNode.popCode,
           orgName: treeNode.orgName,
           iconSkin: treeNode.iconSkin,
           canSelect: treeNode.canSelect,
-          open: treeNode.open
+          open: treeNode.open,
+          fullOrgName: treeNode.fullOrgName
         }
         this.selelctedFilterArr.push(node)
       } else {
+        // 如果同一人有多个组织，取消选择该人时取消所有
+        this.cancelTreeSelected(window.jQuery.fn.zTree.getZTreeObj(treeId), treeNode.id)
         for (let i = 0; i < this.selelctedFilterArr.length; i++) {
           if (treeNode.id === this.selelctedFilterArr[i].id) {
             this.selelctedFilterArr.splice(i, 1)
+            break
           }
         }
       }
     },
     // 选人列表删除选项
     delItem (index, id) {
-      this.selelctedFilterArr.splice(index, 1)
-      if (this.orgUserTree) {
-        this.cancelTreeSelected(this.orgUserTree, id)
-        return
+      for (let i = 0; i < this.selelctedFilterArr.length; i++) {
+        if (this.selelctedFilterArr[i].id === id) {
+          this.selelctedFilterArr.splice(i, 1)
+          break
+        }
       }
-      if (this.groupTree) {
-        this.cancelTreeSelected(this.groupTree, id)
-        return
-      }
-      if (this.myGroupTree) {
-        this.cancelTreeSelected(this.myGroupTree, id)
+      for (const role of this.tabRoles) {
+        if (this[role + 'Tree']) {
+          this.cancelTreeSelected(this[role + 'Tree'], id)
+          return
+        }
       }
     },
     cancelTreeSelected (ztreeObj, id) {
-      const node = ztreeObj.getNodeByParam('id', id, null)
-      ztreeObj.checkNode(node, false, false, true)
+      const nodes = ztreeObj.getNodesByParam('id', id, null)
+      if ( nodes.length > 0 ) {
+        for (let i = 0; i < nodes.length; i++) {
+          if (nodes[i].checked) {
+            ztreeObj.checkNode(nodes[i], false, false, false)
+          }
+        }
+      }
     },
     // 点击确定关闭模态框
     submitSelectedValue () {
       this.selectedArr = this.selelctedFilterArr
       this.$emit('input', this.selectedArr)
       this.dialogVisible = false
+    },
+    handleClearSearchValue (name) {
+      this.$refs[name + 'SearchInput'].activated = true
     }
   }
 }
 </script>
+<style lang="scss" scoped>
+.choose-selector-select-container {
+  width: 40%;
+  padding-right: 0;
+}
+.ipt {
+  width: 215px;
+}
+.choose-selector {
+  >>> .el-tab-pane {
+    padding-left: 5%;
+  }
+  .ztree, .selected-box {
+    border: 1px solid #ccc;
+    border-radius: 3%;
+    height: 300px;
+    margin-top: 9px;
+  }
+  .choose-selector-selected-container {
+    right: 5%;
+    .selected-box {
+      .selected-item {
+        height: 22px;
+      }
+    }
+  }
+}
+</style>

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="height: 100%; overflow: auto;">
     <el-form
       ref="form"
       :model="form"
@@ -7,13 +7,14 @@
       label-width="100px"
       style="margin: 20px auto; width: 1000px;"
     >
+      <el-form-item label="活动名称" prop="name">
+        <el-input v-model="form.name"></el-input>
+      </el-form-item>
       <el-form-item label="选人" prop="users">
         <chooseUser
           v-model="form.users"
-          :allow-write="false"
-          :select-role="roles"
-          :get-user="getUser"
-          :get-search-list="getSearchList"
+          :select-role="['grade']"
+          title="适用年级"
           @input="validateField('users')"
         />
       </el-form-item>
@@ -26,6 +27,27 @@
           dir="component"
           @input="validateField('pictures')"
         />
+      </el-form-item>
+      <el-form-item label="上传样式" prop="upload">
+        <FileUp
+          v-model="form.upload"
+        >
+          <el-button type="text">上传文件</el-button>
+          <template v-slot:list="slotProps">
+            <div v-for="file in slotProps.fileList">
+              名称：{{file.displayName}}， 大小：{{file.fileSize}}， id：{{file.id}}，
+              url：{{file.url}}， 状态：{{file.status}}， 进度：{{file.progress}}
+            </div>
+          </template>
+        </FileUp>
+      </el-form-item>
+      <el-form-item label="限制上传个数">
+        <FileUp
+          value="13051d29943248b19d232bcfd727bc9c"
+          :limit="1"
+          :on-exceed="handleExceed"
+        >
+        </FileUp>
       </el-form-item>
       <el-form-item label="内容" prop="content">
         <Editor v-model="form.content" />
@@ -40,17 +62,22 @@
 </template>
 
 <script>
-import { getChooseUserDataByParams, getSearchListByValue } from '@/api/index'
 export default {
   name: 'app',
   data () {
     return {
       form : {
+        name: '',
         users: [],
         pictures: '13051d29943248b19d232bcfd727bc9c',
+        upload: '13051d29943248b19d232bcfd727bc9c',
         content: ''
       },
       rules: {
+        name: [
+          { required: true, message: '请输入活动名称', trigger: 'blur' },
+          { min: 3, max: 5, message: '长度在 3 到 5 个字符' }
+        ],
         users: [
           { type: 'array', required: true, message: '请选择人员' }
         ],
@@ -60,15 +87,15 @@ export default {
         content: [
           { required: true, message: '请填写内容' }
         ]
-      },
-      roles: ['orgUser']
+      }
     }
   },
   methods: {
-    getUser: getChooseUserDataByParams,
-    getSearchList: getSearchListByValue,
     validateField (type) {
       this.$refs.form.validateField(type)
+    },
+    handleExceed (files, fileList) {
+      this.$message.warning(`当前限制选择 1 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
     },
     onSubmit () {
       this.$refs.form.validate(valid => {

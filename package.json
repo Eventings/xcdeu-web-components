@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@tinymce/tinymce-vue": "^3.2.2",
-    "@xcedu/web-share": "^1.0.12",
     "ali-oss": "^6.9.1",
     "tinymce": "^5.4.0",
     "uuid": "^8.2.0",
@@ -34,6 +33,7 @@
     "html-webpack-plugin": "^3.2.0",
     "sass": "^1.26.10",
     "sass-loader": "^7.0.3",
+    "vue": "^2.5.11",
     "vue-loader": "^13.0.5",
     "vue-template-compiler": "^2.4.4",
     "webpack": "^3.6.0",
