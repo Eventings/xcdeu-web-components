@@ -68,14 +68,17 @@
                   <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
                 </template>
               </el-autocomplete>
-              <tree
-                ref="orgUserNodes"
-                :nodes="orgUserNodes"
-                :setting="setting"
-                @onCheck="onCheck"
-                @onCreated="(treeObj) => handleCreated(treeObj, 'orgUserTree')"
-                @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'orgUserTree')"
-              />
+              <div class="round-border-wrapper">
+                <tree
+                  class="round-border-content"
+                  ref="orgUserNodes"
+                  :nodes="orgUserNodes"
+                  :setting="setting"
+                  @onCheck="onCheck"
+                  @onCreated="(treeObj) => handleCreated(treeObj, 'orgUserTree')"
+                  @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'orgUserTree')"
+                />
+              </div>
             </div>
           </el-tab-pane>
           <el-tab-pane v-if="tabRoles.includes('group')" label="群组" name="group">
@@ -96,14 +99,17 @@
                   <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
                 </template>
               </el-autocomplete>
-              <tree
-                ref="groupNodes"
-                :nodes="groupNodes"
-                :setting="setting"
-                @onCheck="onCheck"
-                @onCreated="(treeObj) => handleCreated(treeObj, 'groupTree')"
-                @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'groupTree')"
-              />
+              <div class="round-border-wrapper">
+                <tree
+                  class="round-border-content"
+                  ref="groupNodes"
+                  :nodes="groupNodes"
+                  :setting="setting"
+                  @onCheck="onCheck"
+                  @onCreated="(treeObj) => handleCreated(treeObj, 'groupTree')"
+                  @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'groupTree')"
+                />
+              </div>
             </div>
           </el-tab-pane>
           <el-tab-pane v-if="tabRoles.includes('grade')" label="年级" name="grade">
@@ -124,14 +130,17 @@
                   <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
                 </template>
               </el-autocomplete>
-              <tree
-                ref="gradeNodes"
-                :nodes="gradeNodes"
-                :setting="setting"
-                @onCheck="onCheck"
-                @onCreated="(treeObj) => handleCreated(treeObj, 'gradeTree')"
-                @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'gradeTree')"
-              />
+              <div class="round-border-wrapper">
+                <tree
+                  class="round-border-content"
+                  ref="gradeNodes"
+                  :nodes="gradeNodes"
+                  :setting="setting"
+                  @onCheck="onCheck"
+                  @onCreated="(treeObj) => handleCreated(treeObj, 'gradeTree')"
+                  @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'gradeTree')"
+                />
+              </div>
             </div>
           </el-tab-pane>
           <el-tab-pane v-if="tabRoles.includes('myGroup')" label="我的群组" name="myGroup">
@@ -152,14 +161,17 @@
                   <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
                 </template>
               </el-autocomplete>
-              <tree
-                ref="myGroupNodes"
-                :nodes="myGroupNodes"
-                :setting="setting"
-                @onCheck="onCheck"
-                @onCreated="(treeObj) => handleCreated(treeObj, 'myGroupTree')"
-                @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'myGroupTree')"
-              />
+              <div class="round-border-wrapper">
+                <tree
+                  class="round-border-content"
+                  ref="myGroupNodes"
+                  :nodes="myGroupNodes"
+                  :setting="setting"
+                  @onCheck="onCheck"
+                  @onCreated="(treeObj) => handleCreated(treeObj, 'myGroupTree')"
+                  @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'myGroupTree')"
+                />
+              </div>
             </div>
           </el-tab-pane>
         </el-tabs>
@@ -178,14 +190,16 @@
             style="position: absolute; right: 0; top: 0; z-index: 1"
             @click="clearAll"
           >全部清空</el-button>
-          <div class="selected-box">
-            <p v-for="(item, index) in filterSelectedList" :key="index" class="selected-item">
-              <span>
-                <i :class="'icon-' + item.iconSkin " />
-                <em :title="item.fullOrgName">{{ item.name }}</em>
-              </span>
-              <i class="icon-close-x" @click="delItem(index, item.id)" />
-            </p>
+          <div class="round-border-wrapper selected-box">
+            <div class="round-border-content">
+              <p v-for="(item, index) in filterSelectedList" :key="index" class="selected-item">
+                <span>
+                  <i :class="'icon-' + item.iconSkin " />
+                  <em :title="item.fullOrgName">{{ item.name }}</em>
+                </span>
+                <i class="icon-close-x" @click="delItem(index, item.id)" />
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -664,12 +678,6 @@ export default {
   >>> .el-tab-pane {
     padding-left: 5%;
   }
-  .ztree, .selected-box {
-    border: 1px solid #ccc;
-    border-radius: 3%;
-    height: 300px;
-    margin-top: 9px;
-  }
   .choose-selector-selected-container {
     right: 5%;
     .selected-box {
@@ -678,5 +686,20 @@ export default {
       }
     }
   }
+}
+.round-border-wrapper {
+  border: 1px solid #ccc;
+  border-radius: 3%;
+  margin-top: 9px;
+  height: 300px;
+  overflow: hidden;
+}
+.round-border-content {
+  height: 100%;
+  overflow: auto;
+  padding: 15px;
+}
+.choose-selector-selected-container>div:last-child {
+  padding: 0;
 }
 </style>
