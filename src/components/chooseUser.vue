@@ -28,7 +28,7 @@
           </template>
         </el-autocomplete>
       </div>
-      <el-button slot="append" :disabled="disabled" @click.native="chooseUser">...</el-button>
+      <el-button class="btn-append" :disabled="disabled" @click.native="chooseUser">···</el-button>
     </div>
     <el-dialog
       :title="title"
@@ -667,6 +667,20 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
+.user-container {
+  border-radius: 4px;
+  background-color: #fff;
+  border: 1px solid #ededed;
+  .btn-append {
+    border: none;
+    border-left: 1px solid #ededed;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+}
+.user-container>div {
+  border: none;
+}
 .choose-selector-select-container {
   width: 40%;
   padding-right: 0;
@@ -700,6 +714,7 @@ export default {
   padding: 15px;
 }
 .choose-selector-selected-container>div:last-child {
+  height: 300px;
   padding: 0;
 }
 </style>
