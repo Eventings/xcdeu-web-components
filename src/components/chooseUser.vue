@@ -610,7 +610,7 @@ export default {
           id: treeNode.id,
           pid: treeNode.pId,
           name: treeNode.name,
-          popcode: treeNode.popCode,
+          popcode: treeNode.popcode,
           orgName: treeNode.orgName,
           iconSkin: treeNode.iconSkin,
           canSelect: treeNode.canSelect,
