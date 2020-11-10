@@ -495,7 +495,7 @@ export default {
       if (this.usersOnly) {
         // 遍历所有的节点，如果该节点popcode != user则禁用单/复选框
         for (let i = 0; i < nodes_all.length; i++) {
-          if (nodes_all[i].popCode !== 'user') {
+          if (nodes_all[i].popcode !== 'user') {
             ztreeObj.setChkDisabled(nodes_all[i], true, false, false);
           }
         }
@@ -503,7 +503,7 @@ export default {
       if (this.gradeOnly) {
         // 遍历所有的节点，如果该节点popcode != grade则禁用单/复选框
         for (let i = 0; i < nodes_all.length; i++) {
-          if (nodes_all[i].popCode !== 'grade') {
+          if (nodes_all[i].popcode !== 'grade') {
             ztreeObj.setChkDisabled(nodes_all[i], true, false, false);
           }
         }
