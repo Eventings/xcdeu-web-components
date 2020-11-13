@@ -33,7 +33,7 @@
     <el-dialog
       :title="title"
       :visible.sync="dialogVisible"
-      width="1000"
+      width="800px"
       top="0"
       class="abow_dialog"
       :fullscreen="isFullScreen"
@@ -62,6 +62,7 @@
                 clearable
                 @clear="handleClearSearchValue('orgUser')"
                 :validate-event="false"
+                class="search-input"
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
@@ -92,6 +93,7 @@
                 clearable
                 @clear="handleClearSearchValue('group')"
                 :validate-event="false"
+                class="search-input"
                 style="visibility: hidden;"
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
@@ -123,6 +125,7 @@
                 clearable
                 @clear="handleClearSearchValue('grade')"
                 :validate-event="false"
+                class="search-input"
                 style="visibility: hidden;"
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
@@ -154,6 +157,7 @@
                 clearable
                 @clear="handleClearSearchValue('myGroup')"
                 :validate-event="false"
+                class="search-input"
                 style="visibility: hidden;"
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
@@ -177,11 +181,11 @@
         </el-tabs>
         <div class="choose-selector-selected-container">
           <el-input
-            class="ipt"
             v-model="selectedSearchValue"
             placeholder="快速查找"
             clearable
             :validate-event="false"
+            class="search-input"
           >
             <i slot="prefix" class="el-input__icon el-icon-search" />
           </el-input>
@@ -681,19 +685,18 @@ export default {
 .user-container>div {
   border: none;
 }
-.choose-selector-select-container {
-  width: 40%;
-  padding-right: 0;
+.abow_dialog >>> .el-dialog {
+  height: 550px;
 }
-.ipt {
-  width: 215px;
+.choose-selector-select-container {
+  width: 50%;
+  padding-right: 10px;
 }
 .choose-selector {
-  >>> .el-tab-pane {
-    padding-left: 5%;
-  }
+  height: 100%;
   .choose-selector-selected-container {
-    right: 5%;
+    width: 50%;
+    padding-left: 10px;
     .selected-box {
       .selected-item {
         height: 22px;
@@ -703,7 +706,7 @@ export default {
 }
 .round-border-wrapper {
   border: 1px solid #ccc;
-  border-radius: 3%;
+  border-radius: 6px;
   margin-top: 9px;
   height: 300px;
   overflow: hidden;
@@ -716,5 +719,13 @@ export default {
 .choose-selector-selected-container>div:last-child {
   height: 300px;
   padding: 0;
+}
+
+.search-input {
+  width: 200px;
+}
+.search-input >>> .el-input__inner {
+  border-radius: 25px;
+  border-color: #ccc;
 }
 </style>
