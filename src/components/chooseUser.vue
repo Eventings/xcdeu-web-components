@@ -66,7 +66,7 @@
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
-                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                  <div>{{ item.name }}<span v-if="item.orgName">&lt;{{ item.orgName }}&gt;</span></div>
                 </template>
               </el-autocomplete>
               <div class="round-border-wrapper">
@@ -98,7 +98,7 @@
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
-                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                  <div>{{ item.name }}<span v-if="item.orgName">&lt;{{ item.orgName }}&gt;</span></div>
                 </template>
               </el-autocomplete>
               <div class="round-border-wrapper">
@@ -130,7 +130,7 @@
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
-                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                  <div>{{ item.name }}<span v-if="item.orgName">&lt;{{ item.orgName }}&gt;</span></div>
                 </template>
               </el-autocomplete>
               <div class="round-border-wrapper">
@@ -162,7 +162,7 @@
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
-                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                  <div>{{ item.name }}<span v-if="item.orgName">&lt;{{ item.orgName }}&gt;</span></div>
                 </template>
               </el-autocomplete>
               <div class="round-border-wrapper">
@@ -363,7 +363,7 @@ export default {
       } else if (item.value) {
         this[treeName + 'SearchValue'] = item.value
       } else {
-        this[treeName + 'SearchValue'] = item.name + '<' + item.orgName + '>'
+        this[treeName + 'SearchValue'] = item.name + (item.orgName ? '<' + item.orgName + '>' : '')
       }
       if (this[treeName + 'SearchValue']) {
         let value = this[treeName + 'SearchValue']
