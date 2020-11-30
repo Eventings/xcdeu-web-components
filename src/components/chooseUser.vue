@@ -66,7 +66,7 @@
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
-                  <div>{{ item.name }}<span v-if="item.orgName">&lt;{{ item.orgName }}&gt;</span></div>
+                  <div>{{ item.name }}</div>
                 </template>
               </el-autocomplete>
               <div class="round-border-wrapper">
@@ -98,7 +98,7 @@
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
-                  <div>{{ item.name }}<span v-if="item.orgName">&lt;{{ item.orgName }}&gt;</span></div>
+                  <div>{{ item.name }}</div>
                 </template>
               </el-autocomplete>
               <div class="round-border-wrapper">
@@ -130,7 +130,7 @@
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
-                  <div>{{ item.name }}<span v-if="item.orgName">&lt;{{ item.orgName }}&gt;</span></div>
+                  <div>{{ item.name }}</div>
                 </template>
               </el-autocomplete>
               <div class="round-border-wrapper">
@@ -162,7 +162,7 @@
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
-                  <div>{{ item.name }}<span v-if="item.orgName">&lt;{{ item.orgName }}&gt;</span></div>
+                  <div>{{ item.name }}</div>
                 </template>
               </el-autocomplete>
               <div class="round-border-wrapper">
@@ -363,7 +363,7 @@ export default {
       } else if (item.value) {
         this[treeName + 'SearchValue'] = item.value
       } else {
-        this[treeName + 'SearchValue'] = item.name + (item.orgName ? '<' + item.orgName + '>' : '')
+        this[treeName + 'SearchValue'] = item.name
       }
       if (this[treeName + 'SearchValue']) {
         let value = this[treeName + 'SearchValue']
@@ -376,6 +376,9 @@ export default {
       // this[treeName + 'Nodes'] = treeObj.getNodesByParamFuzzy('name', queryString, null)
       const inputSearchList = this[treeName + 'SearchNodes']
       this[treeName + 'Nodes'] = queryString ? inputSearchList.filter(this.createFilter(queryString)) : inputSearchList
+      // 注意，这里不需要像treeSearch()方法中那样去重
+      // 如果搜索了就将结果加上组织信息便于辨认
+      this.setting.data.key.name = queryString ? 'fullOrgName' : 'name'
     },
     handleIconClick () {
 
@@ -383,14 +386,26 @@ export default {
     treeSearch (queryString, cb) {
       const inputSearchList = this.orgUserSearchNodes
       const results = queryString ? inputSearchList.filter(this.createFilter(queryString)) : inputSearchList
-      // 如果搜索了就将结果加上组织信息便于辨认
-      this.setting.data.key.name = queryString ? 'fullOrgName' : 'name'
+      // 去重
+      const uniqueResults = []
+      for (var i = 0; i < results.length; i++) {
+        var isUnique = true
+        for (var j = 0; j < uniqueResults.length; j++) {
+          if (uniqueResults[j].name === results[i].name) {
+            isUnique = false
+            break;
+          }
+        }
+        if (isUnique) {
+          uniqueResults.push(results[i])
+        }
+      }
       // 调用 callback 返回建议列表的数据
-      cb(results)
+      cb(uniqueResults)
     },
     createFilter (queryString) {
       return (restaurant) => {
-        return (restaurant.name.toLowerCase().indexOf(queryString.toLowerCase()) === 0)
+        return (restaurant.name.toLowerCase().indexOf(queryString.toLowerCase()) !== -1)
       }
     },
     // 打开模态框 重新渲染已经选择的用户
