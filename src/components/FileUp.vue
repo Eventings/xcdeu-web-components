@@ -55,9 +55,10 @@
 <script>
 import { getOSSKey, uploadResource, loadDetailBatchByIds } from '@/api/index'
 import { downloadAttachment } from '@/util/index'
-import OSS from 'ali-oss'
+import { tools } from 'xc-share'
 import { v4 as uuidv4 } from 'uuid'
 
+const OSS = tools.OSS
 const region = 'oss-cn-shenzhen'
 const bucket = 'gtyzfile'
 

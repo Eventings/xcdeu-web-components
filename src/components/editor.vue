@@ -88,9 +88,10 @@ import 'tinymce/plugins/wordcount'
 import 'tinymce/plugins/help'
 import editor from '@tinymce/tinymce-vue'
 
-import OSS from 'ali-oss'
+import { tools } from 'xc-share'
 import { v4 as uuidv4 } from 'uuid'
 
+const OSS = tools.OSS
 const region = 'oss-cn-shenzhen'
 const bucket = 'gtyzfile'
 
