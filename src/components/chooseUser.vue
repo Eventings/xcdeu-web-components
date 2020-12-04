@@ -703,6 +703,9 @@ export default {
 .abow_dialog >>> .el-dialog {
   height: 550px;
 }
+.abow_dialog >>> .el-input__suffix .el-input__validateIcon {
+  display: none;
+}
 .choose-selector-select-container {
   width: 50%;
   padding-right: 10px;
