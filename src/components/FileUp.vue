@@ -20,7 +20,7 @@
       <div class="file-container el-row">
         <template v-if="uploadType === 'file'">
           <div v-for="(file, index) in fileList" :key="file.id" class="file-item">
-            <img :src="file.contentType | getFileTypeImg">
+            <img :src="file.contentType | getFileTypeImg(publicPath)">
             <div class="file-info">
               <p>
                 <span :title="file.displayName">{{ file.displayName }}</span>
@@ -211,7 +211,7 @@ export default {
         return '>1GB'
       }
     },
-    getFileTypeImg (type) {
+    getFileTypeImg (type, publicPath) {
       var picName = 'unknown.png'
       if (type.indexOf('image') === 0) {
         picName = 'image.png'
@@ -234,7 +234,7 @@ export default {
       } else if (type === 'application/x-ppt' || type === 'application/vnd.ms-powerpoint' || type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
         picName = 'ppt.png'
       }
-      return this.publicPath + 'public/file/' + picName
+      return publicPath + 'public/file/' + picName
     }
   },
   methods: {
