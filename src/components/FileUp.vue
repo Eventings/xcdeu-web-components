@@ -28,7 +28,7 @@
               </p>
               <p v-if="file.status !== 'ready'">
                 <a href="javascript:void(0)" class="color" @click="download(file)">下载</a>
-                <a v-if="file.displayName | checkFileView" href="javascript:void(0)" class="color" @click="previewFile(file)">预览</a>
+                <a v-if="checkFileView(file.displayName)" href="javascript:void(0)" class="color" @click="previewFile(file)">预览</a>
                 <a v-if="!readonly" href="javascript:void(0)" class="color" @click="delFile(index)">删除</a>
               </p>
             </div>
@@ -172,34 +172,6 @@ export default {
     })
   },
   filters: {
-    checkFileView: function (fileDisplayName) {
-      const idx = fileDisplayName.lastIndexOf('.')
-      let fileSuffName = idx === -1 ? '' : fileDisplayName.substring(idx)
-      fileSuffName = fileSuffName.toLowerCase()
-      if (
-        fileSuffName === '.pdf' ||
-        fileSuffName === '.txt' ||
-        fileSuffName === '.doc' ||
-        fileSuffName === '.docx' ||
-        fileSuffName === '.ppt' ||
-        fileSuffName === '.pptx' ||
-        fileSuffName === '.ppsx' ||
-        fileSuffName === '.wps' ||
-        fileSuffName === '.png' ||
-        fileSuffName === '.jpg' ||
-        fileSuffName === '.wav' ||
-        fileSuffName === '.flac' ||
-        fileSuffName === '.mp3' ||
-        fileSuffName === '.mp4' ||
-        fileSuffName === '.gif' ||
-        fileSuffName === '.jpeg' ||
-        fileSuffName === '.mov'
-      ) {
-        return true
-      } else {
-        return false
-      }
-    },
     getFileSize (size) {
       if (size / 1024 < 1) {
         return '1KB'
@@ -348,6 +320,34 @@ export default {
         }
       }
       return true
+    },
+    checkFileView: function (fileDisplayName) {
+      const idx = fileDisplayName.lastIndexOf('.')
+      let fileSuffName = idx === -1 ? '' : fileDisplayName.substring(idx)
+      fileSuffName = fileSuffName.toLowerCase()
+      if (
+        fileSuffName === '.pdf' ||
+        fileSuffName === '.txt' ||
+        fileSuffName === '.doc' ||
+        fileSuffName === '.docx' ||
+        fileSuffName === '.ppt' ||
+        fileSuffName === '.pptx' ||
+        fileSuffName === '.ppsx' ||
+        fileSuffName === '.wps' ||
+        fileSuffName === '.png' ||
+        fileSuffName === '.jpg' ||
+        fileSuffName === '.wav' ||
+        fileSuffName === '.flac' ||
+        fileSuffName === '.mp3' ||
+        fileSuffName === '.mp4' ||
+        fileSuffName === '.gif' ||
+        fileSuffName === '.jpeg' ||
+        fileSuffName === '.mov'
+      ) {
+        return true
+      } else {
+        return false
+      }
     },
     previewFile (file) {
       var href = '/mfs-testBank/detail/fileView/:url/:contentType'
