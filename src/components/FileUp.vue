@@ -305,7 +305,7 @@ export default {
         this.getClient().then(client => {
           const result = client.signatureUrl(file.url.replace(/.*\.com\//, ''), {
             response: {
-              'content-disposition': 'attachment; filename="' + file.displayName + '"'
+              'content-disposition': 'attachment; filename="' + encodeURIComponent(file.displayName) + '"'
             }
           })
           window.location = result

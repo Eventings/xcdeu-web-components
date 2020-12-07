@@ -13,7 +13,7 @@
       <el-form-item label="选人" prop="users">
         <chooseUser
           v-model="form.users"
-          :select-role="['grade']"
+          :select-role="['orgUser']"
           title="适用年级"
           @input="validateField('users')"
         />
