@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>xcedu-web-component</title>
     <link rel="icon" type="images/x-icon" href="<%= MODULE_FTP_BASE_URL %>/favicon.ico">
+    <link rel="preload" href="<%= MODULE_COMMON_BASE_URL %>/polyfill/minified.js" as="script">
     <link rel="preload" href="<%= MODULE_COMMON_BASE_URL %>/lib/vendor.min.js" as="script">
     <link rel="preload" href="<%= MODULE_COMMON_BASE_URL %>/element/element-ui.min.js" as="script">
     <link rel="preload" href="<%= MODULE_COMMON_BASE_URL %>/xcbase/xcedu-share.js" as="script">
@@ -14,6 +15,7 @@
   </head>
   <body>
     <div id="app"></div>
+    <script src="<%= MODULE_COMMON_BASE_URL %>/polyfill/minified.js" ></script>
     <script src="<%= MODULE_COMMON_BASE_URL %>/lib/vendor.min.js"></script>
     <script src="<%= MODULE_COMMON_BASE_URL %>/element/element-ui.min.js"></script>
     <script src="<%= MODULE_COMMON_BASE_URL %>/xcbase/xcedu-share.js"></script>

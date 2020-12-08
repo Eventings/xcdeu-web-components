@@ -28,12 +28,12 @@
           </template>
         </el-autocomplete>
       </div>
-      <el-button slot="append" :disabled="disabled" @click.native="chooseUser">...</el-button>
+      <el-button class="btn-append" :disabled="disabled" @click.native="chooseUser">···</el-button>
     </div>
     <el-dialog
       :title="title"
       :visible.sync="dialogVisible"
-      width="1000"
+      width="800px"
       top="0"
       class="abow_dialog"
       :fullscreen="isFullScreen"
@@ -62,20 +62,24 @@
                 clearable
                 @clear="handleClearSearchValue('orgUser')"
                 :validate-event="false"
+                class="search-input"
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
-                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                  <div>{{ item.name }}</div>
                 </template>
               </el-autocomplete>
-              <tree
-                ref="orgUserNodes"
-                :nodes="orgUserNodes"
-                :setting="setting"
-                @onCheck="onCheck"
-                @onCreated="(treeObj) => handleCreated(treeObj, 'orgUserTree')"
-                @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'orgUserTree')"
-              />
+              <div class="round-border-wrapper">
+                <tree
+                  class="round-border-content"
+                  ref="orgUserNodes"
+                  :nodes="orgUserNodes"
+                  :setting="setting"
+                  @onCheck="onCheck"
+                  @onCreated="(treeObj) => handleCreated(treeObj, 'orgUserTree')"
+                  @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'orgUserTree')"
+                />
+              </div>
             </div>
           </el-tab-pane>
           <el-tab-pane v-if="tabRoles.includes('group')" label="群组" name="group">
@@ -89,21 +93,25 @@
                 clearable
                 @clear="handleClearSearchValue('group')"
                 :validate-event="false"
+                class="search-input"
                 style="visibility: hidden;"
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
-                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                  <div>{{ item.name }}</div>
                 </template>
               </el-autocomplete>
-              <tree
-                ref="groupNodes"
-                :nodes="groupNodes"
-                :setting="setting"
-                @onCheck="onCheck"
-                @onCreated="(treeObj) => handleCreated(treeObj, 'groupTree')"
-                @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'groupTree')"
-              />
+              <div class="round-border-wrapper">
+                <tree
+                  class="round-border-content"
+                  ref="groupNodes"
+                  :nodes="groupNodes"
+                  :setting="setting"
+                  @onCheck="onCheck"
+                  @onCreated="(treeObj) => handleCreated(treeObj, 'groupTree')"
+                  @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'groupTree')"
+                />
+              </div>
             </div>
           </el-tab-pane>
           <el-tab-pane v-if="tabRoles.includes('grade')" label="年级" name="grade">
@@ -117,21 +125,25 @@
                 clearable
                 @clear="handleClearSearchValue('grade')"
                 :validate-event="false"
+                class="search-input"
                 style="visibility: hidden;"
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
-                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                  <div>{{ item.name }}</div>
                 </template>
               </el-autocomplete>
-              <tree
-                ref="gradeNodes"
-                :nodes="gradeNodes"
-                :setting="setting"
-                @onCheck="onCheck"
-                @onCreated="(treeObj) => handleCreated(treeObj, 'gradeTree')"
-                @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'gradeTree')"
-              />
+              <div class="round-border-wrapper">
+                <tree
+                  class="round-border-content"
+                  ref="gradeNodes"
+                  :nodes="gradeNodes"
+                  :setting="setting"
+                  @onCheck="onCheck"
+                  @onCreated="(treeObj) => handleCreated(treeObj, 'gradeTree')"
+                  @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'gradeTree')"
+                />
+              </div>
             </div>
           </el-tab-pane>
           <el-tab-pane v-if="tabRoles.includes('myGroup')" label="我的群组" name="myGroup">
@@ -145,31 +157,35 @@
                 clearable
                 @clear="handleClearSearchValue('myGroup')"
                 :validate-event="false"
+                class="search-input"
                 style="visibility: hidden;"
               >
                 <i slot="prefix" class="el-icon-search el-input__icon" @click="handleIconClick" />
                 <template slot-scope="{ item }">
-                  <div>{{ item.name }}&lt;{{ item.orgName }}&gt;</div>
+                  <div>{{ item.name }}</div>
                 </template>
               </el-autocomplete>
-              <tree
-                ref="myGroupNodes"
-                :nodes="myGroupNodes"
-                :setting="setting"
-                @onCheck="onCheck"
-                @onCreated="(treeObj) => handleCreated(treeObj, 'myGroupTree')"
-                @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'myGroupTree')"
-              />
+              <div class="round-border-wrapper">
+                <tree
+                  class="round-border-content"
+                  ref="myGroupNodes"
+                  :nodes="myGroupNodes"
+                  :setting="setting"
+                  @onCheck="onCheck"
+                  @onCreated="(treeObj) => handleCreated(treeObj, 'myGroupTree')"
+                  @onClick="(e, treeId, treeNode) => clickNode(e, treeId, treeNode, 'myGroupTree')"
+                />
+              </div>
             </div>
           </el-tab-pane>
         </el-tabs>
         <div class="choose-selector-selected-container">
           <el-input
-            class="ipt"
             v-model="selectedSearchValue"
             placeholder="快速查找"
             clearable
             :validate-event="false"
+            class="search-input"
           >
             <i slot="prefix" class="el-input__icon el-icon-search" />
           </el-input>
@@ -178,14 +194,16 @@
             style="position: absolute; right: 0; top: 0; z-index: 1"
             @click="clearAll"
           >全部清空</el-button>
-          <div class="selected-box">
-            <p v-for="(item, index) in filterSelectedList" :key="index" class="selected-item">
-              <span>
-                <i :class="'icon-' + item.iconSkin " />
-                <em :title="item.fullOrgName">{{ item.name }}</em>
-              </span>
-              <i class="icon-close-x" @click="delItem(index, item.id)" />
-            </p>
+          <div class="round-border-wrapper selected-box">
+            <div class="round-border-content">
+              <p v-for="(item, index) in filterSelectedList" :key="index" class="selected-item">
+                <span>
+                  <i :class="'icon-' + item.iconSkin " />
+                  <em :title="item.fullOrgName">{{ item.name }}</em>
+                </span>
+                <i class="icon-close-x" @click="delItem(index, item.id)" />
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -345,7 +363,7 @@ export default {
       } else if (item.value) {
         this[treeName + 'SearchValue'] = item.value
       } else {
-        this[treeName + 'SearchValue'] = item.name + '<' + item.orgName + '>'
+        this[treeName + 'SearchValue'] = item.name
       }
       if (this[treeName + 'SearchValue']) {
         let value = this[treeName + 'SearchValue']
@@ -358,6 +376,9 @@ export default {
       // this[treeName + 'Nodes'] = treeObj.getNodesByParamFuzzy('name', queryString, null)
       const inputSearchList = this[treeName + 'SearchNodes']
       this[treeName + 'Nodes'] = queryString ? inputSearchList.filter(this.createFilter(queryString)) : inputSearchList
+      // 注意，这里不需要像treeSearch()方法中那样去重
+      // 如果搜索了就将结果加上组织信息便于辨认
+      this.setting.data.key.name = queryString ? 'fullOrgName' : 'name'
     },
     handleIconClick () {
 
@@ -365,14 +386,26 @@ export default {
     treeSearch (queryString, cb) {
       const inputSearchList = this.orgUserSearchNodes
       const results = queryString ? inputSearchList.filter(this.createFilter(queryString)) : inputSearchList
-      // 如果搜索了就将结果加上组织信息便于辨认
-      this.setting.data.key.name = queryString ? 'fullOrgName' : 'name'
+      // 去重
+      const uniqueResults = []
+      for (var i = 0; i < results.length; i++) {
+        var isUnique = true
+        for (var j = 0; j < uniqueResults.length; j++) {
+          if (uniqueResults[j].name === results[i].name) {
+            isUnique = false
+            break;
+          }
+        }
+        if (isUnique) {
+          uniqueResults.push(results[i])
+        }
+      }
       // 调用 callback 返回建议列表的数据
-      cb(results)
+      cb(uniqueResults)
     },
     createFilter (queryString) {
       return (restaurant) => {
-        return (restaurant.name.toLowerCase().indexOf(queryString.toLowerCase()) === 0)
+        return (restaurant.name.toLowerCase().indexOf(queryString.toLowerCase()) !== -1)
       }
     },
     // 打开模态框 重新渲染已经选择的用户
@@ -481,7 +514,7 @@ export default {
       if (this.usersOnly) {
         // 遍历所有的节点，如果该节点popcode != user则禁用单/复选框
         for (let i = 0; i < nodes_all.length; i++) {
-          if (nodes_all[i].popCode !== 'user') {
+          if (nodes_all[i].popcode !== 'user') {
             ztreeObj.setChkDisabled(nodes_all[i], true, false, false);
           }
         }
@@ -489,7 +522,7 @@ export default {
       if (this.gradeOnly) {
         // 遍历所有的节点，如果该节点popcode != grade则禁用单/复选框
         for (let i = 0; i < nodes_all.length; i++) {
-          if (nodes_all[i].popCode !== 'grade') {
+          if (nodes_all[i].popcode !== 'grade') {
             ztreeObj.setChkDisabled(nodes_all[i], true, false, false);
           }
         }
@@ -653,30 +686,64 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
-.choose-selector-select-container {
-  width: 40%;
-  padding-right: 0;
+.user-container {
+  border-radius: 4px;
+  background-color: #fff;
+  border: 1px solid #ededed;
+  .btn-append {
+    border: none;
+    border-left: 1px solid #ededed;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
 }
-.ipt {
-  width: 215px;
+.user-container>div {
+  border: none;
+}
+.abow_dialog >>> .el-dialog {
+  height: 550px;
+}
+.abow_dialog >>> .el-input__suffix .el-input__validateIcon {
+  display: none;
+}
+.choose-selector-select-container {
+  width: 50%;
+  padding-right: 10px;
 }
 .choose-selector {
-  >>> .el-tab-pane {
-    padding-left: 5%;
-  }
-  .ztree, .selected-box {
-    border: 1px solid #ccc;
-    border-radius: 3%;
-    height: 300px;
-    margin-top: 9px;
-  }
+  height: 100%;
   .choose-selector-selected-container {
-    right: 5%;
+    width: 50%;
+    padding-left: 10px;
     .selected-box {
       .selected-item {
         height: 22px;
       }
     }
   }
+}
+.round-border-wrapper {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-top: 9px;
+  height: 300px;
+  overflow: hidden;
+}
+.round-border-content {
+  height: 100%;
+  overflow: auto;
+  padding: 15px;
+}
+.choose-selector-selected-container>div:last-child {
+  height: 300px;
+  padding: 0;
+}
+
+.search-input {
+  width: 200px;
+}
+.search-input >>> .el-input__inner {
+  border-radius: 25px;
+  border-color: #ccc;
 }
 </style>

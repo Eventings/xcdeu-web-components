@@ -20,15 +20,15 @@
       <div class="file-container el-row">
         <template v-if="uploadType === 'file'">
           <div v-for="(file, index) in fileList" :key="file.id" class="file-item">
-            <img :src="publicPath + 'public/file/unknown.png'">
+            <img :src="file.contentType | getFileTypeImg(publicPath)">
             <div class="file-info">
               <p>
                 <span :title="file.displayName">{{ file.displayName }}</span>
-                <strong>{{ getFileSize(file.fileSize) }}</strong>
+                <strong>{{ file.fileSize | getFileSize }}</strong>
               </p>
               <p v-if="file.status !== 'ready'">
                 <a href="javascript:void(0)" class="color" @click="download(file)">下载</a>
-                <a :href="file.url" class="color">预览</a>
+                <a v-if="checkFileView(file.displayName)" href="javascript:void(0)" class="color" @click="previewFile(file)">预览</a>
                 <a v-if="!readonly" href="javascript:void(0)" class="color" @click="delFile(index)">删除</a>
               </p>
             </div>
@@ -55,9 +55,10 @@
 <script>
 import { getOSSKey, uploadResource, loadDetailBatchByIds } from '@/api/index'
 import { downloadAttachment } from '@/util/index'
-import OSS from 'ali-oss'
+import { tools } from 'xc-share'
 import { v4 as uuidv4 } from 'uuid'
 
+const OSS = tools.OSS
 const region = 'oss-cn-shenzhen'
 const bucket = 'gtyzfile'
 
@@ -170,6 +171,44 @@ export default {
       }
     })
   },
+  filters: {
+    getFileSize (size) {
+      if (size / 1024 < 1) {
+        return '1KB'
+      } else if (size / 1024 / 1024 < 1) {
+        return (size / 1024).toFixed(1) + 'KB'
+      } else if (size / 1024 / 1024 / 1024 < 1) {
+        return (size / 1024 / 1024).toFixed(1) + 'MB'
+      } else {
+        return '>1GB'
+      }
+    },
+    getFileTypeImg (type, publicPath) {
+      var picName = 'unknown.png'
+      if (type.indexOf('image') === 0) {
+        picName = 'image.png'
+      } else if (type.indexOf('text') === 0) {
+        picName = 'txt.png'
+      } else if (type.indexOf('video') === 0) {
+        picName = 'video.png'
+      } else if (type.indexOf('audio') === 0) {
+        picName = 'mp3.png'
+      } else if (type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || type === 'application/msword') {
+        picName = 'word.png'
+      } else if (type === 'application/x-zip-compressed' || type === 'application/zip') {
+        picName = 'zip.png'
+      } else if (type === 'application/pdf') {
+        picName = 'pdf.png'
+      } else if (type === 'application/x-rar-compressed') {
+        picName = 'rar.png'
+      } else if (type === 'application/x-xls' || type === 'application/vnd.ms-excel' || type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+        picName = 'excel.png'
+      } else if (type === 'application/x-ppt' || type === 'application/vnd.ms-powerpoint' || type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
+        picName = 'ppt.png'
+      }
+      return publicPath + 'public/file/' + picName
+    }
+  },
   methods: {
     getClient () {
       return new Promise((resolve, reject) => {
@@ -221,6 +260,7 @@ export default {
       const id = uuidv4().replace(/-/g, '')
       const rawFile = http.file
       const file = {
+        contentType: rawFile.type,
         displayName: rawFile.name,
         fileSize: rawFile.size,
         id: id,
@@ -255,40 +295,6 @@ export default {
         this.$emit('input', this.value ? this.value + ',' + file.id : file.id)
       })
     },
-    getFileSize (size) {
-      if (size / 1024 < 1) {
-        return '1KB'
-      } else if (size / 1024 / 1024 < 1) {
-        return (size / 1024).toFixed(1) + 'KB'
-      } else if (size / 1024 / 1024 / 1024 < 1) {
-        return (size / 1024 / 1024).toFixed(1) + 'MB'
-      } else {
-        return '>1GB'
-      }
-    },
-    getFileTypeImg (type) {
-      if (type.indexOf('image') !== -1) {
-        return 'images.png'
-      } else if (type === 'text/plain') {
-        return 'txt.png'
-      } else if (type.indexOf('video') !== -1) {
-        return 'video.png'
-      } else if (type.indexOf('audio') !== -1) {
-        return 'audio.png'
-      } else if (type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || type === 'application/msword') {
-        return 'word.png'
-      } else if (type === 'application/x-zip-compressed') {
-        return 'zip.png'
-      } else if (type === 'application/pdf') {
-        return 'pdf.png'
-      } else if (type === 'application/x-rar-compressed') {
-        return 'rar.png'
-      } else if (type === 'application/x-xls' || type === 'application/vnd.ms-excel' || type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-        return 'excel.png'
-      } else if (type === 'application/x-ppt' || type === 'application/vnd.ms-powerpoint' || type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
-        return 'ppt.png'
-      }
-    },
     previewImage (index) {
       this.$refs.imageBox[index].clickHandler()
     },
@@ -299,7 +305,7 @@ export default {
         this.getClient().then(client => {
           const result = client.signatureUrl(file.url.replace(/.*\.com\//, ''), {
             response: {
-              'content-disposition': 'attachment; filename="' + file.displayName + '"'
+              'content-disposition': 'attachment; filename="' + encodeURIComponent(file.displayName) + '"'
             }
           })
           window.location = result
@@ -314,6 +320,40 @@ export default {
         }
       }
       return true
+    },
+    checkFileView: function (fileDisplayName) {
+      const idx = fileDisplayName.lastIndexOf('.')
+      let fileSuffName = idx === -1 ? '' : fileDisplayName.substring(idx)
+      fileSuffName = fileSuffName.toLowerCase()
+      if (
+        fileSuffName === '.pdf' ||
+        fileSuffName === '.txt' ||
+        fileSuffName === '.doc' ||
+        fileSuffName === '.docx' ||
+        fileSuffName === '.ppt' ||
+        fileSuffName === '.pptx' ||
+        fileSuffName === '.ppsx' ||
+        fileSuffName === '.wps' ||
+        fileSuffName === '.png' ||
+        fileSuffName === '.jpg' ||
+        fileSuffName === '.wav' ||
+        fileSuffName === '.flac' ||
+        fileSuffName === '.mp3' ||
+        fileSuffName === '.mp4' ||
+        fileSuffName === '.gif' ||
+        fileSuffName === '.jpeg' ||
+        fileSuffName === '.mov'
+      ) {
+        return true
+      } else {
+        return false
+      }
+    },
+    previewFile (file) {
+      var href = '/mfs-testBank/detail/fileView/:url/:contentType'
+      href = href.replace(':url', file.id)
+      href = href.replace(':contentType', file.contentType.split('/')[0])
+      window.open(href, '_blank')
     }
   }
 }

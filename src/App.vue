@@ -13,7 +13,7 @@
       <el-form-item label="选人" prop="users">
         <chooseUser
           v-model="form.users"
-          :select-role="['grade']"
+          :select-role="['orgUser']"
           title="适用年级"
           @input="validateField('users')"
         />
@@ -109,8 +109,9 @@ export default {
       })
     },
     onTest () {
-      this.form.pictures = '13051d29943248b19d232bcfd727bc9c'
-      this.validateField('pictures')
+      // this.form.pictures = '13051d29943248b19d232bcfd727bc9c'
+      // this.validateField('pictures')
+      console.log(this.form)
     }
   }
 }
